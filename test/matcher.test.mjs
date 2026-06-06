@@ -47,6 +47,28 @@ test('drift hint: param-shape mismatch is suggested (missing route param)', () =
   assert.match(r.drift[0].hint, /did you mean "event\/getEvent\/\{\}"/);
 });
 
+test('drift hint: missing prefix is suggested ("vendors" -> "recommendations/vendors")', () => {
+  const r = match([clientEp('GET', 'vendors')], [serverRoute('GET', 'recommendations/vendors')], {});
+  assert.equal(r.totals.drift, 1);
+  assert.match(r.drift[0].hint, /did you mean "recommendations\/vendors"/);
+});
+
+test('drift hint: word-join across / and - ("contract-templates" -> "contracts/templates")', () => {
+  const r = match([clientEp('GET', 'contract-templates')], [serverRoute('GET', 'contracts/templates')], {});
+  assert.equal(r.totals.drift, 1);
+  assert.match(r.drift[0].hint, /did you mean "contracts\/templates"/);
+});
+
+test('drift hint: wrong container prefix with distinctive tail is suggested', () => {
+  const r = match(
+    [clientEp('GET', 'bookings/ticket-sales-analysis/:id')],
+    [serverRoute('GET', 'event/ticket-sales-analysis/:id')],
+    {},
+  );
+  assert.equal(r.totals.drift, 1);
+  assert.match(r.drift[0].hint, /did you mean "event\/ticket-sales-analysis\/\{\}"/);
+});
+
 test('unverifiable: endpoint flagged resolvable:false', () => {
   const r = match([clientEp('GET', null, false)], [], {});
   assert.equal(r.totals.unverifiable, 1);

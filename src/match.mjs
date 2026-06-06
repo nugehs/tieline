@@ -82,30 +82,72 @@ function hintFor(method, np, byPath) {
   return 'no matching backend route';
 }
 
-// Closeness score for a "did you mean" candidate (lower = closer).
-// Returns null when the candidate is not a plausible suggestion. A match counts
-// only when the two paths are identical once {} route params are ignored
-// (a param-shape mismatch), or have the same segment count with exactly one
-// segment differing by a small edit (typo / singular↔plural). This is segment-
-// aware so a long shared prefix can't inflate the tolerance.
+// Closeness score for a "did you mean" candidate (lower = closer); null when
+// the candidate is not a plausible suggestion. Segment-aware so a long shared
+// prefix can't inflate the tolerance. Cross-references the ENTIRE route set
+// (including dead/orphan routes), so a frontend call that drifted because of a
+// wrong prefix is matched to the real route on another mount point — e.g.
+// "/contract-templates" → "/contracts/templates", "/vendors" →
+// "/recommendations/vendors", "/bookings/ticket-sales-analysis/{}" →
+// "/event/ticket-sales-analysis/{}".
 function pathScore(np, cand) {
   if (np === cand) return null;
   const a = np.split('/');
   const b = cand.split('/');
   const noParams = (segs) => segs.filter((s) => s !== '{}').join('/');
-  if (noParams(a) === noParams(b)) return 0; // param-shape mismatch
+
+  // 1) Same path once {} params are ignored — a param-shape mismatch.
+  if (noParams(a) === noParams(b)) return 0;
+
+  // 2) Same segment count, exactly one segment differs.
   if (a.length === b.length) {
     const diff = [];
     for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) diff.push(i);
     if (diff.length === 1) {
       const i = diff[0];
       const d = lev(a[i], b[i]);
-      // Allow up to ~40% of the shorter segment (min 2) — keeps close pairs
-      // like "viewed"↔"view" while rejecting distinct words like "status"↔"search".
+      // ~40% of the shorter segment (min 2): keeps "viewed"↔"view" /
+      // "users"↔"user" while rejecting distinct words like "status"↔"search".
       const cap = Math.max(2, Math.round(Math.min(a[i].length, b[i].length) * 0.4));
       if (d <= cap) return 1 + d;
+      // Only the FIRST (container) segment differs and the shared tail is
+      // distinctive — a wrong top-level mount (bookings/X vs event/X), not a
+      // different action under the same resource. "Distinctive" = multi-word
+      // (hyphenated) or long, so generic tails like ".../status" don't match.
+      if (i === 0) {
+        const shared = a.filter((s, j) => j !== 0 && s !== '{}');
+        if (shared.some((s) => s.includes('-')) || shared.join('').length >= 12) {
+          return 20;
+        }
+      }
     }
   }
+
+  // 3) Missing prefix — the candidate ends with the full FE path.
+  if (
+    b.length > a.length &&
+    a.join('/') === b.slice(b.length - a.length).join('/') &&
+    noParams(a).length >= 5
+  ) {
+    return 10 + (b.length - a.length);
+  }
+
+  // 4) Word-join differences across "/" and "-" (contract-templates vs
+  //    contracts/templates): equal token bags, every token twinned (exact or
+  //    a small edit), so distinct actions still don't match.
+  const toks = (segs) => noParams(segs).split(/[/-]/).filter(Boolean);
+  const ta = toks(a);
+  const tb = toks(b);
+  if (ta.length === tb.length && ta.length >= 2) {
+    const used = new Array(tb.length).fill(false);
+    let twinned = 0;
+    for (const t of ta) {
+      const k = tb.findIndex((u, j) => !used[j] && (u === t || lev(u, t) <= 2));
+      if (k >= 0) { used[k] = true; twinned++; }
+    }
+    if (twinned === ta.length) return 15;
+  }
+
   return null;
 }
 
