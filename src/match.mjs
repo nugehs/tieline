@@ -71,16 +71,42 @@ function hintFor(method, np, byPath) {
     const verbs = [...new Set(sameP.map((r) => r.method))].join(', ');
     return `path exists but as ${verbs}, not ${method}`;
   }
-  // Nearest path sharing the first segment.
-  const seg = np.split('/')[0];
-  const near = [...byPath.keys()].filter((p) => p.split('/')[0] === seg);
-  if (near.length) {
-    const best = near.sort((a, b) => lev(np, a) - lev(np, b))[0];
-    if (lev(np, best) <= Math.max(3, Math.round(best.length * 0.34))) {
-      return `did you mean "${best}"?`;
+  // Only suggest a route that is genuinely close — otherwise the hint misleads
+  // (e.g. "event-vendor/status" should NOT suggest "event-vendor/search").
+  let best = null;
+  for (const cand of byPath.keys()) {
+    const s = pathScore(np, cand);
+    if (s != null && (best == null || s < best.s)) best = { cand, s };
+  }
+  if (best) return `did you mean "${best.cand}"?`;
+  return 'no matching backend route';
+}
+
+// Closeness score for a "did you mean" candidate (lower = closer).
+// Returns null when the candidate is not a plausible suggestion. A match counts
+// only when the two paths are identical once {} route params are ignored
+// (a param-shape mismatch), or have the same segment count with exactly one
+// segment differing by a small edit (typo / singular↔plural). This is segment-
+// aware so a long shared prefix can't inflate the tolerance.
+function pathScore(np, cand) {
+  if (np === cand) return null;
+  const a = np.split('/');
+  const b = cand.split('/');
+  const noParams = (segs) => segs.filter((s) => s !== '{}').join('/');
+  if (noParams(a) === noParams(b)) return 0; // param-shape mismatch
+  if (a.length === b.length) {
+    const diff = [];
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) diff.push(i);
+    if (diff.length === 1) {
+      const i = diff[0];
+      const d = lev(a[i], b[i]);
+      // Allow up to ~40% of the shorter segment (min 2) — keeps close pairs
+      // like "viewed"↔"view" while rejecting distinct words like "status"↔"search".
+      const cap = Math.max(2, Math.round(Math.min(a[i].length, b[i].length) * 0.4));
+      if (d <= cap) return 1 + d;
     }
   }
-  return 'no matching backend route';
+  return null;
 }
 
 function counts(b) {
