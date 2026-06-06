@@ -134,7 +134,7 @@ function resolve(fileMap) {
       if (desc.appVars.has(owner)) continue;
       if (resolvedKeys.has(file + '#' + owner)) continue;
       for (const r of desc.routes) {
-        if (r.owner === owner) out.push(route(r.method, r.path, file, r.line, true));
+        if (r.owner === owner) out.push(route(r.method, joinPath(r.path), file, r.line, true));
       }
     }
   }

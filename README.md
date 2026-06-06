@@ -163,6 +163,29 @@ from that spec.
   bugs (a renamed field, a changed enum) get caught.
 - **v0.4+** — second client/server adapter to prove the abstraction holds.
 
+## Tests
+
+```bash
+npm test    # node --test, zero dependencies
+```
+
+52 tests on Node's built-in runner, no test framework to install:
+
+- **normalize** — every param syntax (`${id}`/`:id`/`<int:id>`/`[id]`/`{id}`),
+  query stripping, basePath, `joinPath`.
+- **matcher** — all four buckets, drift hints (method-mismatch, "did you mean"),
+  `ignore`, `ALL`/`ANY` any-verb routes, cross-syntax param matching.
+- **adapters** — every server + client adapter against a fixture, plus edge
+  cases via throwaway temp repos (Express `app.all` + unmounted router, Next
+  route groups + catch-all, Spring `@RequestMapping(method=…)`, Flask default
+  GET, rtk-query runtime urls → unverifiable, non-HttpClient `.get()` ignored).
+- **openapi** — OpenAPI 3 `servers[].url` prefix, Swagger 2 `basePath`, config
+  `stripPrefix`, missing-file error.
+- **doctor** — undocumented / phantom / matched, method-mismatch hints, ignore.
+- **integration** — three cross-stack matcher proofs (RTK↔Express,
+  Angular↔Spring, axios↔FastAPI) and the real `seam` CLI (exit codes, `--json`,
+  `--no-fail`, `doctor`, unknown-adapter error).
+
 ## Limitations (v0.1)
 
 - Regex extraction, not full AST — robust on conventional code, will miss exotic
