@@ -16,9 +16,11 @@ export function match(endpoints, routes, { basePath = '', ignore = [] } = {}) {
   // Index BE routes by exact key, and by path (any method) for smarter hints.
   const byKey = new Map();
   const byPath = new Map();
+  const anyMethodPaths = new Set(); // routes that accept any verb (app.all, Next pages API)
   for (const r of routes) {
     const np = normalizePath(r.rawPath, { basePath });
     r._np = np;
+    if (r.method === 'ALL' || r.method === 'ANY') anyMethodPaths.add(np);
     const key = routeKey(r.method, np);
     if (!byKey.has(key)) byKey.set(key, []);
     byKey.get(key).push(r);
@@ -49,7 +51,7 @@ export function match(endpoints, routes, { basePath = '', ignore = [] } = {}) {
     if (isIgnored(np)) continue;
 
     const key = routeKey(ep.method, np);
-    if (byKey.has(key)) {
+    if (byKey.has(key) || anyMethodPaths.has(np)) {
       matched.push(ep);
       usedKeys.add(key);
       continue;

@@ -114,20 +114,35 @@ ServerAdapter.extract() → Route[]    { method, rawPath, file, line }
                   ❌ drift   🟡 dead   ⚠️ unverifiable   ✅ matched
 ```
 
-- **Shipped adapters:** `rtk-query` (client); `nestjs`, `express`, and
-  universal `openapi` (server).
-- **`express` is the native MERN/MEAN/MEVN backend** (no spec required). It
-  walks the `app.use()` mount graph — across `require`/`import` boundaries and
-  nested routers — to compose full paths from imperative routing. Routers it
-  can't reach from an app are surfaced with `unresolvedMount`, never dropped.
-- **`openapi` is the universal server adapter:** point it at any OpenAPI 2/3
-  doc (file or URL) and it covers *every* backend that emits a spec —
-  Express+swagger-jsdoc, NestJS, FastAPI, Spring springdoc, .NET Swashbuckle.
-  One adapter, N frameworks.
-- **Planned:** client → `react-query`, `axios-fetch`, `angular-http`; server →
-  `fastapi`, `fastify`. A new adapter is a new ecosystem; the matcher never
-  changes — proven by a test that runs an RTK-Query client against an Express
-  server with zero matcher changes.
+**Shipped adapters** (mix any client with any server — the matcher is the same):
+
+| Client (calls)                          | Server (routes)                                            |
+| --------------------------------------- | ---------------------------------------------------------- |
+| `rtk-query` — Redux Toolkit Query       | `nestjs` — decorators                                      |
+| `axios-fetch` — axios / fetch, React Query/SWR queryFns | `express` — `app.use()` mount graph, cross-file |
+| `angular-http` — Angular `HttpClient`   | `fastify` — verb shorthand + `route({})`                   |
+|                                         | `next` — file-based (app router + pages API)               |
+|                                         | `fastapi` — `APIRouter` prefix + `include_router`          |
+|                                         | `flask` — blueprints + `methods=[]`                        |
+|                                         | `spring` — `@RequestMapping` + `@*Mapping`                 |
+|                                         | `openapi` — **universal**: any OpenAPI 2/3 doc (file/URL)  |
+
+That covers **MERN** (rtk/axios ↔ express), **MEAN** (angular ↔ express),
+**MEVN** (axios ↔ express), **Next** full-stack, **Python** (axios/angular ↔
+fastapi/flask), and **enterprise** (angular ↔ spring) — plus `openapi` for any
+backend that emits a spec (Express+swagger-jsdoc, FastAPI auto, Spring
+springdoc, .NET Swashbuckle, …).
+
+Notes:
+- **`express`** walks the `app.use()` mount graph across `require`/`import`
+  boundaries and nested routers; routers it can't reach are flagged
+  `unresolvedMount`, never dropped.
+- **`next`** is file-system routing: app-router files export `GET`/`POST`/…;
+  pages-router handlers serve any verb (matched as `ALL`).
+- **Planned:** `react-query`/`swr` first-class clients, `koa`/`django` servers,
+  `--deep` OpenAPI DTO-shape diffing. A new adapter is a new ecosystem; the
+  matcher never changes — proven by tests running RTK↔Express, Angular↔Spring,
+  and axios↔FastAPI through one unchanged matcher.
 
 ### Native vs spec = documentation drift
 

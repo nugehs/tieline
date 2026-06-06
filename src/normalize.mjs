@@ -16,8 +16,10 @@ export function normalizePath(raw, { basePath = '' } = {}) {
 
   // Collapse the remaining parameter syntaxes to a single placeholder.
   p = p
-    .replace(/:[A-Za-z0-9_]+/g, '{}') // Nest param: :id
-    .replace(/\{[^}]*\}/g, '{}'); // OpenAPI:    {id}
+    .replace(/:[A-Za-z0-9_]+/g, '{}') // Express/Nest: :id
+    .replace(/<[^>]+>/g, '{}') // Flask/Werkzeug: <int:id>, <path:p>
+    .replace(/\[[^\]]+\]/g, '{}') // Next.js file route: [id], [...slug]
+    .replace(/\{[^}]*\}/g, '{}'); // OpenAPI/Spring: {id}
 
   // Trim slashes/whitespace.
   p = p.trim().replace(/^\/+/, '').replace(/\/+$/, '');

@@ -3,13 +3,33 @@ import { extractRtkQuery } from './adapters/rtk-query.mjs';
 import { extractNestjs } from './adapters/nestjs.mjs';
 import { extractOpenapi } from './adapters/openapi.mjs';
 import { extractExpress } from './adapters/express.mjs';
+import { extractFastify } from './adapters/fastify.mjs';
+import { extractNext } from './adapters/next.mjs';
+import { extractFastapi } from './adapters/fastapi.mjs';
+import { extractFlask } from './adapters/flask.mjs';
+import { extractSpring } from './adapters/spring.mjs';
+import { extractAxiosFetch } from './adapters/axios-fetch.mjs';
+import { extractAngularHttp } from './adapters/angular-http.mjs';
 import { match } from './match.mjs';
 import { doctor } from './doctor.mjs';
 import { reportHuman, reportDoctor } from './reporters/human.mjs';
 import { reportJson, reportDoctorJson } from './reporters/json.mjs';
 
-const CLIENT_ADAPTERS = { 'rtk-query': extractRtkQuery };
-const SERVER_ADAPTERS = { nestjs: extractNestjs, openapi: extractOpenapi, express: extractExpress };
+const CLIENT_ADAPTERS = {
+  'rtk-query': extractRtkQuery,
+  'axios-fetch': extractAxiosFetch,
+  'angular-http': extractAngularHttp,
+};
+const SERVER_ADAPTERS = {
+  nestjs: extractNestjs,
+  openapi: extractOpenapi,
+  express: extractExpress,
+  fastify: extractFastify,
+  next: extractNext,
+  fastapi: extractFastapi,
+  flask: extractFlask,
+  spring: extractSpring,
+};
 
 export async function run(argv) {
   const args = parseArgs(argv);
