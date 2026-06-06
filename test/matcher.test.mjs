@@ -29,6 +29,46 @@ test('drift hint: "did you mean" for a near path on the same segment', () => {
   assert.match(r.drift[0].hint, /did you mean "users\/profile"/);
 });
 
+test('drift hint: distant word on a shared prefix is NOT suggested ("status" != "search")', () => {
+  const r = match([clientEp('GET', 'event-vendor/status')], [serverRoute('GET', 'event-vendor/search')], {});
+  assert.equal(r.totals.drift, 1);
+  assert.equal(r.drift[0].hint, 'no matching backend route');
+});
+
+test('drift hint: close segment edit is still suggested ("viewed" -> "view")', () => {
+  const r = match([clientEp('POST', 'quotes/viewed')], [serverRoute('POST', 'quotes/view')], {});
+  assert.equal(r.totals.drift, 1);
+  assert.match(r.drift[0].hint, /did you mean "quotes\/view"/);
+});
+
+test('drift hint: param-shape mismatch is suggested (missing route param)', () => {
+  const r = match([clientEp('GET', 'event/getEvent')], [serverRoute('GET', 'event/getEvent/:id')], {});
+  assert.equal(r.totals.drift, 1);
+  assert.match(r.drift[0].hint, /did you mean "event\/getEvent\/\{\}"/);
+});
+
+test('drift hint: missing prefix is suggested ("vendors" -> "recommendations/vendors")', () => {
+  const r = match([clientEp('GET', 'vendors')], [serverRoute('GET', 'recommendations/vendors')], {});
+  assert.equal(r.totals.drift, 1);
+  assert.match(r.drift[0].hint, /did you mean "recommendations\/vendors"/);
+});
+
+test('drift hint: word-join across / and - ("contract-templates" -> "contracts/templates")', () => {
+  const r = match([clientEp('GET', 'contract-templates')], [serverRoute('GET', 'contracts/templates')], {});
+  assert.equal(r.totals.drift, 1);
+  assert.match(r.drift[0].hint, /did you mean "contracts\/templates"/);
+});
+
+test('drift hint: wrong container prefix with distinctive tail is suggested', () => {
+  const r = match(
+    [clientEp('GET', 'bookings/ticket-sales-analysis/:id')],
+    [serverRoute('GET', 'event/ticket-sales-analysis/:id')],
+    {},
+  );
+  assert.equal(r.totals.drift, 1);
+  assert.match(r.drift[0].hint, /did you mean "event\/ticket-sales-analysis\/\{\}"/);
+});
+
 test('unverifiable: endpoint flagged resolvable:false', () => {
   const r = match([clientEp('GET', null, false)], [], {});
   assert.equal(r.totals.unverifiable, 1);
