@@ -50,9 +50,19 @@ seam list       # the full resolved contract map (every endpoint + status)
 seam orphans    # backend routes no frontend call reaches
 seam doctor     # code↔spec drift: routes in code but missing from the OpenAPI doc
 seam check --json        # machine-readable
+seam check --html report.html   # self-contained visual report (see below)
 seam check --no-fail     # report only, always exit 0
 seam check --config path/to/seam.config.json
 ```
+
+### `--html` — a shareable visual report
+
+`seam check --html report.html` writes one self-contained file (inline CSS/JS,
+no external assets) you can open in any browser or attach to a PR. It features a
+**contract-flow diagram** — frontend resources on the left, backend on the
+right, with curved links coloured green (matched) / red (drift), plus a health
+ring, summary cards, and live-filterable drift / unverifiable / unused-route
+tables. Hovering a resource highlights its links.
 
 ### `seam doctor` — does your code match your published docs?
 

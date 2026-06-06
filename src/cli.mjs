@@ -14,6 +14,8 @@ import { match } from './match.mjs';
 import { doctor } from './doctor.mjs';
 import { reportHuman, reportDoctor } from './reporters/human.mjs';
 import { reportJson, reportDoctorJson } from './reporters/json.mjs';
+import { reportHtml } from './reporters/html.mjs';
+import { writeFileSync } from 'node:fs';
 
 const CLIENT_ADAPTERS = {
   'rtk-query': extractRtkQuery,
@@ -52,8 +54,17 @@ export async function run(argv) {
     ignore: cfg.ignore,
   });
 
+  if (args.html) {
+    writeFileSync(args.html, reportHtml(result, {
+      clientAdapter: cfg.client.adapter,
+      serverAdapter: cfg.server.adapter,
+      generatedAt: new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC',
+    }));
+    console.log(`\n  📄 HTML report written to ${args.html}\n`);
+  }
+
   if (args.json) reportJson(result);
-  else reportHuman(result, { command: args.command });
+  else if (!args.html) reportHuman(result, { command: args.command });
 
   // Exit code: fail when a configured bucket is non-empty (unless --no-fail).
   if (args.command === 'check' && !args.noFail) {
@@ -95,13 +106,14 @@ async function runDoctor(cfg, args) {
 }
 
 function parseArgs(argv) {
-  const args = { command: 'check', json: false, noFail: false, config: null, help: false };
+  const args = { command: 'check', json: false, noFail: false, config: null, help: false, html: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === 'check' || a === 'list' || a === 'orphans' || a === 'doctor') args.command = a;
     else if (a === '--json') args.json = true;
     else if (a === '--no-fail') args.noFail = true;
     else if (a === '--config') args.config = argv[++i];
+    else if (a === '--html') args.html = argv[++i] || 'seam-report.html';
     else if (a === '-h' || a === '--help') args.help = true;
   }
   return args;
@@ -124,6 +136,7 @@ COMMANDS
 OPTIONS
   --config <path>   Path to seam.config.json (default: search up from cwd)
   --json            Machine-readable output
+  --html <file>     Write a self-contained HTML report (with a contract-flow chart)
   --no-fail         Always exit 0 (report only)
   -h, --help        Show this help
 `);

@@ -95,6 +95,21 @@ test('cli: `doctor` agrees when code and spec match (exit 0)', () => {
   }
 });
 
+test('cli: `--html` writes a self-contained report with the flow chart', () => {
+  const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'seam-html-')), 'report.html');
+  try {
+    const r = seam(['check', '--config', 'seam.express.config.json', '--no-fail', '--html', out]);
+    assert.equal(r.status, 0);
+    const html = fs.readFileSync(out, 'utf8');
+    assert.match(html, /<!doctype html>/i);
+    assert.match(html, /class="flowsvg"/); // the contract-flow SVG
+    assert.match(html, /Contract flow/);
+    assert.ok(!/<script src=|<link .*href=/.test(html), 'must be self-contained (no external assets)');
+  } finally {
+    fs.rmSync(path.dirname(out), { recursive: true, force: true });
+  }
+});
+
 test('cli: unknown adapter fails with a clear message', () => {
   const cfgPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'seam-cfg-')), 'seam.config.json');
   fs.writeFileSync(cfgPath, JSON.stringify({ client: { adapter: 'nope' }, server: { adapter: 'express', repo: ROOT } }));
