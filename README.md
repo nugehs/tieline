@@ -114,14 +114,20 @@ ServerAdapter.extract() → Route[]    { method, rawPath, file, line }
                   ❌ drift   🟡 dead   ⚠️ unverifiable   ✅ matched
 ```
 
-- **Shipped adapters:** `rtk-query` (client); `nestjs` + `openapi` (server).
+- **Shipped adapters:** `rtk-query` (client); `nestjs`, `express`, and
+  universal `openapi` (server).
+- **`express` is the native MERN/MEAN/MEVN backend** (no spec required). It
+  walks the `app.use()` mount graph — across `require`/`import` boundaries and
+  nested routers — to compose full paths from imperative routing. Routers it
+  can't reach from an app are surfaced with `unresolvedMount`, never dropped.
 - **`openapi` is the universal server adapter:** point it at any OpenAPI 2/3
   doc (file or URL) and it covers *every* backend that emits a spec —
   Express+swagger-jsdoc, NestJS, FastAPI, Spring springdoc, .NET Swashbuckle.
   One adapter, N frameworks.
 - **Planned:** client → `react-query`, `axios-fetch`, `angular-http`; server →
-  `express` (native, for the no-spec MERN/MEAN case), `fastapi`. A new adapter
-  is a new ecosystem; the matcher never changes.
+  `fastapi`, `fastify`. A new adapter is a new ecosystem; the matcher never
+  changes — proven by a test that runs an RTK-Query client against an Express
+  server with zero matcher changes.
 
 ### Native vs spec = documentation drift
 

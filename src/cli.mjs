@@ -2,13 +2,14 @@ import { loadConfig } from './config.mjs';
 import { extractRtkQuery } from './adapters/rtk-query.mjs';
 import { extractNestjs } from './adapters/nestjs.mjs';
 import { extractOpenapi } from './adapters/openapi.mjs';
+import { extractExpress } from './adapters/express.mjs';
 import { match } from './match.mjs';
 import { doctor } from './doctor.mjs';
 import { reportHuman, reportDoctor } from './reporters/human.mjs';
 import { reportJson, reportDoctorJson } from './reporters/json.mjs';
 
 const CLIENT_ADAPTERS = { 'rtk-query': extractRtkQuery };
-const SERVER_ADAPTERS = { nestjs: extractNestjs, openapi: extractOpenapi };
+const SERVER_ADAPTERS = { nestjs: extractNestjs, openapi: extractOpenapi, express: extractExpress };
 
 export async function run(argv) {
   const args = parseArgs(argv);
