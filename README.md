@@ -45,13 +45,38 @@ so `seam` says so rather than crying wolf.
 ## Usage
 
 ```bash
-seam check      # report drift + unverifiable, exit non-zero on drift (CI gate)
+seam check      # FE↔BE drift: report + exit non-zero on drift (CI gate)
 seam list       # the full resolved contract map (every endpoint + status)
 seam orphans    # backend routes no frontend call reaches
+seam doctor     # code↔spec drift: routes in code but missing from the OpenAPI doc
 seam check --json        # machine-readable
 seam check --no-fail     # report only, always exit 0
 seam check --config path/to/seam.config.json
 ```
+
+### `seam doctor` — does your code match your published docs?
+
+Diffs routes parsed from source (a native adapter like `nestjs`) against the
+routes declared in your OpenAPI spec (`server.spec`, a file or live URL):
+
+```
+  seam · doctor   code (nestjs)  ↔  spec (http://localhost:9999/doc-json)
+
+  ❌  36 undocumented  (in code, missing from the published spec)
+     GET    /premium-analytics/subscription/features   src/premium-analytics/...:54
+     POST   /ai/generate-image                         src/cloudflare-ai/...:42
+     ...
+  👻  0 phantom  (in the spec, no matching route in code)
+
+  ✅ 517 agree   ❌ 36 undocumented   👻 0 phantom   (553 code routes, 517 spec routes)
+```
+
+`undocumented` = working routes invisible to anyone generating an SDK or
+partner integration from the spec. `phantom` = the spec promises a route the
+code no longer serves (stale docs). On the bashbop backend, `doctor` flagged 5
+entire modules (`/ai`, `/theme`, `/premium-analytics`, `/recommendations`,
+`/dummy-events`) absent from the published doc — and, in passing, caught a Nest
+`@Post([...])` array-path route that an early version of the parser had missed.
 
 ## Configuration
 

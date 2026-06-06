@@ -3,8 +3,9 @@ import { extractRtkQuery } from './adapters/rtk-query.mjs';
 import { extractNestjs } from './adapters/nestjs.mjs';
 import { extractOpenapi } from './adapters/openapi.mjs';
 import { match } from './match.mjs';
-import { reportHuman } from './reporters/human.mjs';
-import { reportJson } from './reporters/json.mjs';
+import { doctor } from './doctor.mjs';
+import { reportHuman, reportDoctor } from './reporters/human.mjs';
+import { reportJson, reportDoctorJson } from './reporters/json.mjs';
 
 const CLIENT_ADAPTERS = { 'rtk-query': extractRtkQuery };
 const SERVER_ADAPTERS = { nestjs: extractNestjs, openapi: extractOpenapi };
@@ -14,6 +15,8 @@ export async function run(argv) {
   if (args.help) return printHelp();
 
   const cfg = loadConfig(args.config);
+
+  if (args.command === 'doctor') return runDoctor(cfg, args);
 
   const clientAdapter = CLIENT_ADAPTERS[cfg.client.adapter];
   const serverAdapter = SERVER_ADAPTERS[cfg.server.adapter];
@@ -38,11 +41,43 @@ export async function run(argv) {
   }
 }
 
+// `seam doctor`: diff native-parsed code routes against the OpenAPI spec.
+async function runDoctor(cfg, args) {
+  const codeAdapter = SERVER_ADAPTERS[cfg.server.adapter];
+  if (!codeAdapter) throw new Error(`Unknown server adapter: ${cfg.server.adapter}`);
+  if (cfg.server.adapter === 'openapi') {
+    throw new Error("`doctor` needs a native server adapter (e.g. nestjs) as the code source, plus server.spec for the doc.");
+  }
+  if (!cfg.server.spec) {
+    throw new Error('`doctor` needs `server.spec` (file path or url to the OpenAPI doc) in your config.');
+  }
+
+  const codeRoutes = await codeAdapter(cfg.server);
+  const specRoutes = await extractOpenapi({
+    spec: cfg.server.spec,
+    stripPrefix: cfg.server.globalPrefix,
+    repoRoot: cfg.server.repoRoot,
+  });
+
+  const result = doctor(codeRoutes, specRoutes, {
+    basePath: cfg.server.globalPrefix,
+    ignore: cfg.ignore,
+  });
+
+  if (args.json) reportDoctorJson(result);
+  else reportDoctor(result, { codeAdapter: cfg.server.adapter, specSource: cfg.server.spec });
+
+  if (!args.noFail) {
+    const fail = (cfg.doctorFailOn || ['undocumented']).some((k) => (result.totals[k] || 0) > 0);
+    if (fail) process.exitCode = 1;
+  }
+}
+
 function parseArgs(argv) {
   const args = { command: 'check', json: false, noFail: false, config: null, help: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === 'check' || a === 'list' || a === 'orphans') args.command = a;
+    if (a === 'check' || a === 'list' || a === 'orphans' || a === 'doctor') args.command = a;
     else if (a === '--json') args.json = true;
     else if (a === '--no-fail') args.noFail = true;
     else if (a === '--config') args.config = argv[++i];
@@ -62,6 +97,8 @@ COMMANDS
   check      Report drift + unverifiable calls, exit non-zero on drift (default)
   list       Print the full resolved contract map (every endpoint + its status)
   orphans    List backend routes no resolvable frontend call reaches
+  doctor     Diff native-parsed code routes vs the OpenAPI spec (needs server.spec):
+             undocumented (in code, not in spec) + phantom (in spec, not in code)
 
 OPTIONS
   --config <path>   Path to seam.config.json (default: search up from cwd)

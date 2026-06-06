@@ -73,6 +73,49 @@ function printDead(dead) {
   console.log('');
 }
 
+export function reportDoctor(result, { codeAdapter, specSource } = {}) {
+  const { undocumented, phantom, totals } = result;
+
+  console.log('');
+  console.log(c('bold', '  seam · doctor') + c('dim', `   code (${codeAdapter})  ↔  spec (${rel(specSource)})`));
+  console.log('');
+
+  if (undocumented.length) {
+    console.log(c('red', c('bold', `  ❌  ${undocumented.length} undocumented`)) + c('dim', '  (in code, missing from the published spec)'));
+    for (const r of undocumented) {
+      console.log(`     ${c('red', r.method.padEnd(6))} ${c('bold', '/' + r._np)}   ${loc(r)}`);
+      if (r.hint) console.log(`            ${c('yellow', '→ ' + r.hint)}`);
+    }
+    console.log('');
+  }
+
+  if (phantom.length) {
+    console.log(c('yellow', c('bold', `  👻  ${phantom.length} phantom`)) + c('dim', '  (in the spec, no matching route in code)'));
+    for (const r of phantom.slice(0, 30)) {
+      console.log(`     ${c('yellow', r.method.padEnd(6))} ${'/' + r._np}`);
+      if (r.hint) console.log(`            ${c('dim', '→ ' + r.hint)}`);
+    }
+    if (phantom.length > 30) console.log(c('dim', `     … and ${phantom.length - 30} more`));
+    console.log('');
+  }
+
+  if (!undocumented.length && !phantom.length) {
+    console.log(c('green', '  ✅ code and spec agree on every route.'));
+    console.log('');
+  }
+
+  console.log(
+    '  ' +
+      c('green', `✅ ${totals.matched} agree`) +
+      '   ' +
+      c('red', `❌ ${totals.undocumented} undocumented`) +
+      '   ' +
+      c('yellow', `👻 ${totals.phantom} phantom`) +
+      c('dim', `   (${totals.code} code routes, ${totals.spec} spec routes)`),
+  );
+  console.log('');
+}
+
 function printList(matched, drift, unverifiable) {
   console.log('');
   const all = [

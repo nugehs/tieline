@@ -8,6 +8,21 @@ const slim = (e) => ({
   line: e.line,
 });
 
+export function reportDoctorJson(result) {
+  const slimR = (r) => ({ method: r.method, path: '/' + r._np, hint: r.hint, file: r.file, line: r.line || undefined });
+  console.log(
+    JSON.stringify(
+      {
+        totals: result.totals,
+        undocumented: result.undocumented.map(slimR),
+        phantom: result.phantom.map(slimR),
+      },
+      null,
+      2,
+    ),
+  );
+}
+
 export function reportJson(result) {
   const { matched, drift, unverifiable, dead, totals } = result;
   console.log(
