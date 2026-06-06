@@ -1,0 +1,16 @@
+{
+  "client": {
+    "adapter": "rtk-query",
+    "repo": "../bashbop-event-web",
+    "roots": ["redux/apis", "src/redux/apis"],
+    "basePath": "/api/v1"
+  },
+  "server": {
+    "adapter": "nestjs",
+    "repo": "../bashbop-api",
+    "roots": ["src"],
+    "globalPrefix": "api/v1"
+  },
+  "ignore": [],
+  "failOn": ["drift"]
+}

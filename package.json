@@ -1,0 +1,29 @@
+{
+  "name": "seam-contract",
+  "version": "0.1.0",
+  "description": "Static FE↔BE contract-drift checker. Pact without writing a single contract test.",
+  "type": "module",
+  "bin": {
+    "seam": "bin/seam.mjs"
+  },
+  "scripts": {
+    "check": "node bin/seam.mjs check"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "keywords": [
+    "contract-testing",
+    "openapi",
+    "nestjs",
+    "rtk-query",
+    "api-drift",
+    "monorepo"
+  ],
+  "license": "MIT"
+}
