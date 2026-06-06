@@ -89,10 +89,24 @@ ServerAdapter.extract() → Route[]    { method, rawPath, file, line }
                   ❌ drift   🟡 dead   ⚠️ unverifiable   ✅ matched
 ```
 
-- **Shipped adapters:** `rtk-query` (client), `nestjs` (server).
-- **Planned:** client → `react-query`, `openapi-fetch`, `axios`; server →
-  `express`, `fastify`, `fastapi`, `spring`. A new adapter is a new ecosystem;
-  the matcher never changes.
+- **Shipped adapters:** `rtk-query` (client); `nestjs` + `openapi` (server).
+- **`openapi` is the universal server adapter:** point it at any OpenAPI 2/3
+  doc (file or URL) and it covers *every* backend that emits a spec —
+  Express+swagger-jsdoc, NestJS, FastAPI, Spring springdoc, .NET Swashbuckle.
+  One adapter, N frameworks.
+- **Planned:** client → `react-query`, `axios-fetch`, `angular-http`; server →
+  `express` (native, for the no-spec MERN/MEAN case), `fastapi`. A new adapter
+  is a new ecosystem; the matcher never changes.
+
+### Native vs spec = documentation drift
+
+Running a **native** server adapter (`nestjs`) and the **`openapi`** adapter
+against the same backend and diffing the two surfaces a distinct bug class:
+routes that exist in code but are **missing from the published spec** (or vice
+versa). On the bashbop backend this found 10 working routes
+(`premium-analytics/*`, `feed-back/send`, `user/add-user`, `excel/import`)
+absent from the live OpenAPI doc — invisible to any SDK or partner generated
+from that spec.
 
 ## Roadmap
 

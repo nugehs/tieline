@@ -10,8 +10,8 @@ const C = {
 const on = process.stdout.isTTY && !process.env.NO_COLOR;
 const c = (k, s) => (on ? C[k] + s + C.reset : s);
 
-const rel = (f) => f.replace(process.cwd() + '/', '');
-const loc = (e) => c('dim', `${rel(e.file)}:${e.line}`);
+const rel = (f) => String(f).replace(process.cwd() + '/', '');
+const loc = (e) => c('dim', e.line ? `${rel(e.file)}:${e.line}` : rel(e.file));
 
 export function reportHuman(result, { command = 'check' } = {}) {
   const { matched, drift, unverifiable, dead, totals } = result;

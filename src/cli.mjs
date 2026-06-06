@@ -1,14 +1,15 @@
 import { loadConfig } from './config.mjs';
 import { extractRtkQuery } from './adapters/rtk-query.mjs';
 import { extractNestjs } from './adapters/nestjs.mjs';
+import { extractOpenapi } from './adapters/openapi.mjs';
 import { match } from './match.mjs';
 import { reportHuman } from './reporters/human.mjs';
 import { reportJson } from './reporters/json.mjs';
 
 const CLIENT_ADAPTERS = { 'rtk-query': extractRtkQuery };
-const SERVER_ADAPTERS = { nestjs: extractNestjs };
+const SERVER_ADAPTERS = { nestjs: extractNestjs, openapi: extractOpenapi };
 
-export function run(argv) {
+export async function run(argv) {
   const args = parseArgs(argv);
   if (args.help) return printHelp();
 
@@ -19,8 +20,8 @@ export function run(argv) {
   if (!clientAdapter) throw new Error(`Unknown client adapter: ${cfg.client.adapter}`);
   if (!serverAdapter) throw new Error(`Unknown server adapter: ${cfg.server.adapter}`);
 
-  const endpoints = clientAdapter(cfg.client);
-  const routes = serverAdapter(cfg.server);
+  const endpoints = await clientAdapter(cfg.client);
+  const routes = await serverAdapter(cfg.server);
 
   const result = match(endpoints, routes, {
     basePath: cfg.client.basePath,

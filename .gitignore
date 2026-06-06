@@ -2,3 +2,6 @@ node_modules/
 *.log
 .DS_Store
 dist/
+
+# Real customer specs used only as local test inputs — never commit into the tool.
+examples/bashbop-openapi.json
