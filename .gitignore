@@ -7,5 +7,5 @@ dist/
 examples/bashbop-openapi.json
 
 # Generated reports
-seam-report.html
-seam-report.png
+dowel-report.html
+dowel-report.png

@@ -1,0 +1,1838 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>seam · contract report</title>
+<style>
+:root{--bg:#0b0f1a;--panel:#121829;--ink:#e7ecf5;--dim:#8b97b0;--line:#222c44;--ok:#22c55e;--bad:#f43f5e;--warn:#f59e0b;--mute:#64748b;--accent:#6366f1}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0b0f1a,#0d1322);color:var(--ink);font:15px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.hero{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:34px 40px;background:radial-gradient(1200px 200px at 10% -40%,rgba(99,102,241,.35),transparent),linear-gradient(90deg,#11162a,#0e1424);border-bottom:1px solid var(--line)}
+.brand{font-size:30px;font-weight:800;letter-spacing:-.5px}.logo{color:var(--accent)}.sub{font-size:13px;color:var(--dim);font-weight:600;margin-left:10px;text-transform:uppercase;letter-spacing:2px}
+.meta{margin-top:8px;color:var(--dim);font-size:14px;display:flex;gap:16px;flex-wrap:wrap}.arrow{color:var(--accent)}.dim{color:var(--dim)}
+.ring{position:relative;width:120px;height:120px;flex:none}.ring svg{transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:12}.track{stroke:#1c2540}.value{stroke:var(--ok);stroke-linecap:round;stroke-dasharray:calc(var(--p)*3.267) 1000;transition:stroke-dasharray .6s}
+.value.warn{stroke:var(--warn)}.value.bad{stroke:var(--bad)}
+.ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}.ring-label strong{font-size:26px}.ring-label span{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+main{max-width:1000px;margin:0 auto;padding:28px 24px 60px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+.cardx{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;position:relative;overflow:hidden}
+.cardx::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+.cardx.ok::before{background:var(--ok)}.cardx.bad::before{background:var(--bad)}.cardx.warn::before{background:var(--warn)}.cardx.mute::before{background:var(--mute)}
+.cardx .num{font-size:34px;font-weight:800;letter-spacing:-1px}.cardx.ok .num{color:var(--ok)}.cardx.bad .num{color:var(--bad)}.cardx.warn .num{color:var(--warn)}.cardx.mute .num{color:var(--mute)}
+.cardx .lab{font-weight:700;text-transform:capitalize}.csub{color:var(--dim);font-size:12.5px;margin-top:2px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:22px}
+.panel h2{margin:0 0 4px;font-size:18px;display:flex;align-items:center;gap:10px}
+.count{font-size:13px;font-weight:700;padding:2px 10px;border-radius:999px}.count.bad{background:rgba(244,63,94,.15);color:var(--bad)}.count.warn{background:rgba(245,158,11,.15);color:var(--warn)}.count.mute{background:rgba(100,116,139,.18);color:#9aa7bd}.count.ok{background:rgba(34,197,94,.15);color:var(--ok)}
+.hint{color:var(--dim);font-size:13px;margin:.2em 0 1em}.k{font-size:11px;vertical-align:middle}.k.ok{color:var(--ok)}.k.bad{color:var(--bad)}.k.mute{color:var(--mute)}
+.flow{overflow-x:auto}.flowsvg{width:100%;height:auto;min-width:680px}
+.col{fill:var(--dim);font-size:10px;font-weight:700;letter-spacing:2px}
+.node rect{fill:#0e1730;stroke:var(--line)}.node text{fill:var(--ink);font-size:13px;font-weight:600}
+.node .badge{fill:var(--dim);font-size:11px;font-weight:700}
+.node.bad rect{stroke:var(--bad)}.node.missing rect{stroke:var(--mute);stroke-dasharray:4 3}.node.missing text{fill:var(--mute)}
+.node:hover rect{filter:brightness(1.4)}
+.link{fill:none;opacity:.55;transition:opacity .15s}.link.matched{stroke:var(--ok)}.link.drift{stroke:var(--bad);stroke-dasharray:6 4}.link.missing{stroke:var(--mute);stroke-dasharray:2 4}
+.flowsvg:hover .link{opacity:.18}.flowsvg .link:hover{opacity:1}
+.filter{width:100%;background:#0d1426;border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px 12px;margin-bottom:12px;font:13px ui-monospace,monospace}
+table{width:100%;border-collapse:collapse;font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace}
+tbody tr:hover{background:rgba(99,102,241,.07)}
+td{padding:5px 10px;border-top:1px solid var(--line);vertical-align:top}
+.verb{display:inline-block;min-width:50px;text-align:center;font-weight:700;font-size:10.5px;letter-spacing:.5px;padding:2px 6px;border-radius:6px;background:#18203a}
+.verb.GET{color:#38bdf8}.verb.POST{color:#34d399}.verb.PUT,.verb.PATCH{color:#fbbf24}.verb.DELETE{color:#fb7185}.verb.ALL{color:#a78bfa}
+.path{font-weight:600;overflow-wrap:anywhere}.hintcell{color:var(--warn)}
+.ep .path{margin-left:8px}.sub{color:var(--dim);font-size:11px;margin-top:3px}
+.loc{color:var(--dim);text-align:right;white-space:nowrap;cursor:default}.loc:hover{color:var(--ink)}
+td.dim{color:var(--dim)}
+footer{text-align:center;color:var(--dim);font-size:13px;padding:24px}
+@media(max-width:680px){.cards{grid-template-columns:repeat(2,1fr)}.hero{flex-direction:column;align-items:flex-start}}
+</style></head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <div class="brand"><span class="logo">⟡</span> seam<span class="sub">contract report</span></div>
+    <div class="meta">
+      <span>rtk-query <span class="arrow">↔</span> nestjs</span>
+      <span class="dim">2026-06-06 19:36 UTC</span>
+    </div>
+  </div>
+  <div class="ring" style="--p:84">
+    <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52"/><circle class="value warn" cx="60" cy="60" r="52"/></svg>
+    <div class="ring-label"><strong>84%</strong><span>matched</span></div>
+  </div>
+</header>
+
+<main>
+  <section class="cards">
+    <div class="cardx ok"><div class="num">278</div><div class="lab">matched</div><div class="csub">resolve to a real route</div></div>
+    <div class="cardx bad"><div class="num">38</div><div class="lab">drift</div><div class="csub">FE calls a missing route</div></div>
+    <div class="cardx warn"><div class="num">15</div><div class="lab">unverifiable</div><div class="csub">url built at runtime</div></div>
+    <div class="cardx mute"><div class="num">278</div><div class="lab">unused routes</div><div class="csub">no FE call reaches them</div></div>
+  </section>
+
+  <section class="panel">
+    <h2>Contract flow</h2>
+    <p class="hint">Frontend resources on the left, backend on the right. <span class="k ok">●</span> matched · <span class="k bad">●</span> drift · <span class="k mute">●</span> ∅ no backend route. Showing the top 12 resources per side; full detail in the tables below.</p>
+    <div class="flow"><svg viewBox="0 0 920 630" class="flowsvg" role="img" aria-label="contract flow">
+    <text class="col" x="26" y="10">FRONTEND</text>
+    <text class="col" x="894" y="10" text-anchor="end">BACKEND</text>
+    <path class="link matched" d="M250,492 C460,492 460,446 670,446" stroke-width="8" data-from="series"><title>series → series: 11 matched</title></path><path class="link matched" d="M250,400 C460,400 460,354 670,354" stroke-width="5" data-from="quotes"><title>quotes → quotes: 5 matched</title></path><path class="link matched" d="M250,32 C460,32 460,262 670,262" stroke-width="8" data-from="paystack"><title>paystack → paystack: 23 matched</title></path><path class="link matched" d="M250,170 C460,170 460,308 670,308" stroke-width="7" data-from="profile"><title>profile → profile: 7 matched</title></path><path class="link matched" d="M250,308 C460,308 460,170 670,170" stroke-width="8" data-from="event"><title>event → event: 12 matched</title></path><path class="link matched" d="M250,262 C460,262 460,124 670,124" stroke-width="8" data-from="contracts"><title>contracts → contracts: 13 matched</title></path><path class="link matched" d="M250,78 C460,78 460,78 670,78" stroke-width="8" data-from="bookings"><title>bookings → bookings: 13 matched</title></path><path class="link matched" d="M250,216 C460,216 460,32 670,32" stroke-width="8" data-from="blog"><title>blog → blog: 16 matched</title></path><path class="link matched" d="M250,124 C460,124 460,400 670,400" stroke-width="8" data-from="seller"><title>seller → seller: 17 matched</title></path><path class="link matched" d="M250,538 C460,538 460,216 670,216" stroke-width="8" data-from="event-audience"><title>event-audience → event-audience: 10 matched</title></path><path class="link matched" d="M250,446 C460,446 460,492 670,492" stroke-width="8" data-from="user"><title>user → user: 9 matched</title></path><path class="link drift" d="M250,78 C460,78 460,78 670,78" stroke-width="4" data-from="bookings"><title>bookings → bookings: 4 drift</title></path><path class="link drift" d="M250,262 C460,262 460,124 670,124" stroke-width="1.5" data-from="contracts"><title>contracts → contracts: 1 drift</title></path><path class="link missing" d="M250,354 C460,354 460,584 670,584" stroke-width="7" data-from="contract-templates"><title>contract-templates → ∅: 7 drift</title></path><path class="link drift" d="M250,308 C460,308 460,170 670,170" stroke-width="1.5" data-from="event"><title>event → event: 1 drift</title></path><path class="link drift" d="M250,170 C460,170 460,308 670,308" stroke-width="5" data-from="profile"><title>profile → profile: 5 drift</title></path><path class="link drift" d="M250,32 C460,32 460,262 670,262" stroke-width="1.5" data-from="paystack"><title>paystack → paystack: 1 drift</title></path><path class="link drift" d="M250,400 C460,400 460,354 670,354" stroke-width="4" data-from="quotes"><title>quotes → quotes: 4 drift</title></path><path class="link drift" d="M250,446 C460,446 460,492 670,492" stroke-width="1.5" data-from="user"><title>user → user: 1 drift</title></path>
+    <g class="node bad " data-res="paystack">
+      <rect x="20" y="16" rx="8" width="230" height="32"/>
+      <text x="34" y="37">/paystack <tspan class="badge">24</tspan></text>
+    </g><g class="node bad " data-res="bookings">
+      <rect x="20" y="62" rx="8" width="230" height="32"/>
+      <text x="34" y="83">/bookings <tspan class="badge">17</tspan></text>
+    </g><g class="node  " data-res="seller">
+      <rect x="20" y="108" rx="8" width="230" height="32"/>
+      <text x="34" y="129">/seller <tspan class="badge">17</tspan></text>
+    </g><g class="node bad " data-res="profile">
+      <rect x="20" y="154" rx="8" width="230" height="32"/>
+      <text x="34" y="175">/profile <tspan class="badge">12</tspan></text>
+    </g><g class="node  " data-res="blog">
+      <rect x="20" y="200" rx="8" width="230" height="32"/>
+      <text x="34" y="221">/blog <tspan class="badge">16</tspan></text>
+    </g><g class="node bad " data-res="contracts">
+      <rect x="20" y="246" rx="8" width="230" height="32"/>
+      <text x="34" y="267">/contracts <tspan class="badge">14</tspan></text>
+    </g><g class="node bad " data-res="event">
+      <rect x="20" y="292" rx="8" width="230" height="32"/>
+      <text x="34" y="313">/event <tspan class="badge">13</tspan></text>
+    </g><g class="node bad " data-res="contract-templates">
+      <rect x="20" y="338" rx="8" width="230" height="32"/>
+      <text x="34" y="359">/contract-templates <tspan class="badge">7</tspan></text>
+    </g><g class="node bad " data-res="quotes">
+      <rect x="20" y="384" rx="8" width="230" height="32"/>
+      <text x="34" y="405">/quotes <tspan class="badge">9</tspan></text>
+    </g><g class="node bad " data-res="user">
+      <rect x="20" y="430" rx="8" width="230" height="32"/>
+      <text x="34" y="451">/user <tspan class="badge">10</tspan></text>
+    </g><g class="node  " data-res="series">
+      <rect x="20" y="476" rx="8" width="230" height="32"/>
+      <text x="34" y="497">/series <tspan class="badge">11</tspan></text>
+    </g><g class="node  " data-res="event-audience">
+      <rect x="20" y="522" rx="8" width="230" height="32"/>
+      <text x="34" y="543">/event-audience <tspan class="badge">10</tspan></text>
+    </g>
+    <g class="node  " data-res="blog">
+      <rect x="670" y="16" rx="8" width="230" height="32"/>
+      <text x="684" y="37">/blog <tspan class="badge">16</tspan></text>
+    </g><g class="node  " data-res="bookings">
+      <rect x="670" y="62" rx="8" width="230" height="32"/>
+      <text x="684" y="83">/bookings <tspan class="badge">17</tspan></text>
+    </g><g class="node  " data-res="contracts">
+      <rect x="670" y="108" rx="8" width="230" height="32"/>
+      <text x="684" y="129">/contracts <tspan class="badge">14</tspan></text>
+    </g><g class="node  " data-res="event">
+      <rect x="670" y="154" rx="8" width="230" height="32"/>
+      <text x="684" y="175">/event <tspan class="badge">13</tspan></text>
+    </g><g class="node  " data-res="event-audience">
+      <rect x="670" y="200" rx="8" width="230" height="32"/>
+      <text x="684" y="221">/event-audience <tspan class="badge">10</tspan></text>
+    </g><g class="node  " data-res="paystack">
+      <rect x="670" y="246" rx="8" width="230" height="32"/>
+      <text x="684" y="267">/paystack <tspan class="badge">24</tspan></text>
+    </g><g class="node  " data-res="profile">
+      <rect x="670" y="292" rx="8" width="230" height="32"/>
+      <text x="684" y="313">/profile <tspan class="badge">12</tspan></text>
+    </g><g class="node  " data-res="quotes">
+      <rect x="670" y="338" rx="8" width="230" height="32"/>
+      <text x="684" y="359">/quotes <tspan class="badge">9</tspan></text>
+    </g><g class="node  " data-res="seller">
+      <rect x="670" y="384" rx="8" width="230" height="32"/>
+      <text x="684" y="405">/seller <tspan class="badge">17</tspan></text>
+    </g><g class="node  " data-res="series">
+      <rect x="670" y="430" rx="8" width="230" height="32"/>
+      <text x="684" y="451">/series <tspan class="badge">11</tspan></text>
+    </g><g class="node  " data-res="user">
+      <rect x="670" y="476" rx="8" width="230" height="32"/>
+      <text x="684" y="497">/user <tspan class="badge">10</tspan></text>
+    </g><g class="node  " data-res="(root)">
+      <rect x="670" y="522" rx="8" width="230" height="32"/>
+      <text x="684" y="543">/(root) </text>
+    </g><g class="node  missing" data-res="∅">
+      <rect x="670" y="568" rx="8" width="230" height="32"/>
+      <text x="684" y="589">∅  no backend route </text>
+    </g>
+  </svg></div>
+  </section>
+
+  <section class="panel">
+    <h2>Drift <span class="count bad">38</span></h2>
+    <p class="hint">These frontend calls do not match any backend route.</p>
+    <input class="filter" placeholder="Filter 38 rows…" oninput="filterRows(this)">
+    <table><tbody>
+    <tr data-text="POST bookings/confirm confirmItemBooking">
+      <td class="ep"><span class="verb POST">POST</span><span class="path">/bookings/confirm</span><div class="sub">confirmItemBooking</div></td>
+      <td class="hintcell">did you mean &quot;bookings/{}/confirm&quot;?</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/booking-api.ts:449">apis/booking-api.ts:449</td>
+    </tr>
+    <tr data-text="PUT bookings/guest-booking updateGuestBooking">
+      <td class="ep"><span class="verb PUT">PUT</span><span class="path">/bookings/guest-booking</span><div class="sub">updateGuestBooking</div></td>
+      <td class="hintcell">path exists but as POST, not PUT</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/booking-api.ts:469">apis/booking-api.ts:469</td>
+    </tr>
+    <tr data-text="GET bookings/guest-booking/{} getGuestBooking">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/bookings/guest-booking/{}</span><div class="sub">getGuestBooking</div></td>
+      <td class="hintcell">did you mean &quot;bookings/guest-booking&quot;?</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/booking-api.ts:477">apis/booking-api.ts:477</td>
+    </tr>
+    <tr data-text="GET bookings/ticket-sales-analysis/{} getTicketSalesAnalysis">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/bookings/ticket-sales-analysis/{}</span><div class="sub">getTicketSalesAnalysis</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/booking-api.ts:533">apis/booking-api.ts:533</td>
+    </tr>
+    <tr data-text="GET contracts/booking/{} getBookingContracts">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/contracts/booking/{}</span><div class="sub">getBookingContracts</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/contract-api.ts:100">apis/contract-api.ts:100</td>
+    </tr>
+    <tr data-text="GET contract-templates getContractTemplates">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/contract-templates</span><div class="sub">getContractTemplates</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/contract-api.ts:192">apis/contract-api.ts:192</td>
+    </tr>
+    <tr data-text="GET contract-templates/{} getContractTemplate">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/contract-templates/{}</span><div class="sub">getContractTemplate</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/contract-api.ts:203">apis/contract-api.ts:203</td>
+    </tr>
+    <tr data-text="POST contract-templates createContractTemplate">
+      <td class="ep"><span class="verb POST">POST</span><span class="path">/contract-templates</span><div class="sub">createContractTemplate</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/contract-api.ts:216">apis/contract-api.ts:216</td>
+    </tr>
+    <tr data-text="PUT contract-templates/{} updateContractTemplate">
+      <td class="ep"><span class="verb PUT">PUT</span><span class="path">/contract-templates/{}</span><div class="sub">updateContractTemplate</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/contract-api.ts:229">apis/contract-api.ts:229</td>
+    </tr>
+    <tr data-text="DELETE contract-templates/{} deleteContractTemplate">
+      <td class="ep"><span class="verb DELETE">DELETE</span><span class="path">/contract-templates/{}</span><div class="sub">deleteContractTemplate</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/contract-api.ts:239">apis/contract-api.ts:239</td>
+    </tr>
+    <tr data-text="POST contract-templates/{}/set-default setDefaultTemplate">
+      <td class="ep"><span class="verb POST">POST</span><span class="path">/contract-templates/{}/set-default</span><div class="sub">setDefaultTemplate</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/contract-api.ts:248">apis/contract-api.ts:248</td>
+    </tr>
+    <tr data-text="POST contract-templates/{}/create-contract createContractFromTemplate">
+      <td class="ep"><span class="verb POST">POST</span><span class="path">/contract-templates/{}/create-contract</span><div class="sub">createContractFromTemplate</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/contract-api.ts:265">apis/contract-api.ts:265</td>
+    </tr>
+    <tr data-text="PUT enquiries/{} updateEnquiryDetails">
+      <td class="ep"><span class="verb PUT">PUT</span><span class="path">/enquiries/{}</span><div class="sub">updateEnquiryDetails</div></td>
+      <td class="hintcell">path exists but as GET, not PUT</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/enquiry-api.ts:140">apis/enquiry-api.ts:140</td>
+    </tr>
+    <tr data-text="GET event/getEvent getEventById">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/event/getEvent</span><div class="sub">getEventById</div></td>
+      <td class="hintcell">did you mean &quot;event/getEvent/{}&quot;?</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/event-apis.ts:160">apis/event-apis.ts:160</td>
+    </tr>
+    <tr data-text="GET event-vendor/status getEventVendorStatus">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/event-vendor/status</span><div class="sub">getEventVendorStatus</div></td>
+      <td class="hintcell">did you mean &quot;event-vendor/search&quot;?</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/event-vendor-api.ts:128">apis/event-vendor-api.ts:128</td>
+    </tr>
+    <tr data-text="PATCH event-vendor/status updateEventVendorStatus">
+      <td class="ep"><span class="verb PATCH">PATCH</span><span class="path">/event-vendor/status</span><div class="sub">updateEventVendorStatus</div></td>
+      <td class="hintcell">did you mean &quot;event-vendor/search&quot;?</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/event-vendor-api.ts:137">apis/event-vendor-api.ts:137</td>
+    </tr>
+    <tr data-text="GET event-vendor/profile/{} getEventVendorProfile">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/event-vendor/profile/{}</span><div class="sub">getEventVendorProfile</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/event-vendor-api.ts:145">apis/event-vendor-api.ts:145</td>
+    </tr>
+    <tr data-text="GET profile/services getUserServices">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/profile/services</span><div class="sub">getUserServices</div></td>
+      <td class="hintcell">did you mean &quot;profile/services/{}&quot;?</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/event-vendor-api.ts:152">apis/event-vendor-api.ts:152</td>
+    </tr>
+    <tr data-text="POST profile/services updateServices">
+      <td class="ep"><span class="verb POST">POST</span><span class="path">/profile/services</span><div class="sub">updateServices</div></td>
+      <td class="hintcell">did you mean &quot;profile/services/{}&quot;?</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/event-vendor-api.ts:162">apis/event-vendor-api.ts:162</td>
+    </tr>
+    <tr data-text="GET profile/availability getAvailability">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/profile/availability</span><div class="sub">getAvailability</div></td>
+      <td class="hintcell">did you mean &quot;profile/availability/{}&quot;?</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/event-vendor-api.ts:172">apis/event-vendor-api.ts:172</td>
+    </tr>
+    <tr data-text="POST profile/availability addAvailability">
+      <td class="ep"><span class="verb POST">POST</span><span class="path">/profile/availability</span><div class="sub">addAvailability</div></td>
+      <td class="hintcell">did you mean &quot;profile/availability/{}&quot;?</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/event-vendor-api.ts:182">apis/event-vendor-api.ts:182</td>
+    </tr>
+    <tr data-text="DELETE profile/availability/{} deleteAvailability">
+      <td class="ep"><span class="verb DELETE">DELETE</span><span class="path">/profile/availability/{}</span><div class="sub">deleteAvailability</div></td>
+      <td class="hintcell">path exists but as PUT, GET, not DELETE</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/event-vendor-api.ts:202">apis/event-vendor-api.ts:202</td>
+    </tr>
+    <tr data-text="PUT organizer-profile/{} updateOrganizerProfile">
+      <td class="ep"><span class="verb PUT">PUT</span><span class="path">/organizer-profile/{}</span><div class="sub">updateOrganizerProfile</div></td>
+      <td class="hintcell">path exists but as GET, not PUT</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/organizer-profile-api.ts:144">apis/organizer-profile-api.ts:144</td>
+    </tr>
+    <tr data-text="POST organizer-profile/{}/gallery uploadGalleryImage">
+      <td class="ep"><span class="verb POST">POST</span><span class="path">/organizer-profile/{}/gallery</span><div class="sub">uploadGalleryImage</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/organizer-profile-api.ts:162">apis/organizer-profile-api.ts:162</td>
+    </tr>
+    <tr data-text="POST organizer-profile/{}/videos uploadVideo">
+      <td class="ep"><span class="verb POST">POST</span><span class="path">/organizer-profile/{}/videos</span><div class="sub">uploadVideo</div></td>
+      <td class="hintcell">did you mean &quot;organizer-profile/{}&quot;?</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/organizer-profile-api.ts:180">apis/organizer-profile-api.ts:180</td>
+    </tr>
+    <tr data-text="GET paystack/payouts/{} getPayoutDetails">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/paystack/payouts/{}</span><div class="sub">getPayoutDetails</div></td>
+      <td class="hintcell">did you mean &quot;paystack/payouts&quot;?</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/paystack-api.ts:505">apis/paystack-api.ts:505</td>
+    </tr>
+    <tr data-text="PUT quotes/{} updateQuote">
+      <td class="ep"><span class="verb PUT">PUT</span><span class="path">/quotes/{}</span><div class="sub">updateQuote</div></td>
+      <td class="hintcell">path exists but as GET, DELETE, not PUT</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/quote-api.ts:61">apis/quote-api.ts:61</td>
+    </tr>
+    <tr data-text="POST quotes/{}/duplicate duplicateQuote">
+      <td class="ep"><span class="verb POST">POST</span><span class="path">/quotes/{}/duplicate</span><div class="sub">duplicateQuote</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/quote-api.ts:133">apis/quote-api.ts:133</td>
+    </tr>
+    <tr data-text="GET quotes/conversation/{} getConversationQuotes">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/quotes/conversation/{}</span><div class="sub">getConversationQuotes</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/quote-api.ts:141">apis/quote-api.ts:141</td>
+    </tr>
+    <tr data-text="POST quotes/{}/viewed markQuoteViewed">
+      <td class="ep"><span class="verb POST">POST</span><span class="path">/quotes/{}/viewed</span><div class="sub">markQuoteViewed</div></td>
+      <td class="hintcell">did you mean &quot;quotes/{}/view&quot;?</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/quote-api.ts:150">apis/quote-api.ts:150</td>
+    </tr>
+    <tr data-text="GET vendors getVendorRecommendations">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/vendors</span><div class="sub">getVendorRecommendations</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/recommendations-api.ts:453">apis/recommendations-api.ts:453</td>
+    </tr>
+    <tr data-text="GET analytics/vendor/{} getVendorAnalytics">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/analytics/vendor/{}</span><div class="sub">getVendorAnalytics</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/recommendations-api.ts:461">apis/recommendations-api.ts:461</td>
+    </tr>
+    <tr data-text="GET analytics/market getMarketInsights">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/analytics/market</span><div class="sub">getMarketInsights</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/recommendations-api.ts:472">apis/recommendations-api.ts:472</td>
+    </tr>
+    <tr data-text="GET vendors/public getPublicVendorRecommendations">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/vendors/public</span><div class="sub">getPublicVendorRecommendations</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/recommendations-api.ts:543">apis/recommendations-api.ts:543</td>
+    </tr>
+    <tr data-text="GET users/{} PublicUserProfile">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/users/{}</span><div class="sub">PublicUserProfile</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/user-api.ts:460">apis/user-api.ts:460</td>
+    </tr>
+    <tr data-text="GET chart-data/overall-statistics getOverallStatistics">
+      <td class="ep"><span class="verb GET">GET</span><span class="path">/chart-data/overall-statistics</span><div class="sub">getOverallStatistics</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/user-api.ts:467">apis/user-api.ts:467</td>
+    </tr>
+    <tr data-text="POST user/add-organization-member addOrganizationMember">
+      <td class="ep"><span class="verb POST">POST</span><span class="path">/user/add-organization-member</span><div class="sub">addOrganizationMember</div></td>
+      <td class="hintcell">did you mean &quot;user/add-user-as-organization-member&quot;?</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/user-api.ts:476">apis/user-api.ts:476</td>
+    </tr>
+    <tr data-text="POST feedback createFeedback">
+      <td class="ep"><span class="verb POST">POST</span><span class="path">/feedback</span><div class="sub">createFeedback</div></td>
+      <td class="hintcell">no matching backend route</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/src/redux/apis/feedback-api.ts:21">apis/feedback-api.ts:21</td>
+    </tr></tbody></table>
+  </section>
+
+  <section class="panel">
+    <h2>Unverifiable <span class="count warn">15</span></h2>
+    <p class="hint">Calls whose URL is assembled at runtime. Reported, never guessed.</p>
+    <input class="filter" placeholder="Filter 15 rows…" oninput="filterRows(this)">
+    <table><tbody>
+    <tr data-text="getPlatformRevenueSummary /Users/segzy/projects/bashbop-event-web/redux/apis/admin-platform-revenue-api.ts">
+      <td class="dim" colspan="2">getPlatformRevenueSummary</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/admin-platform-revenue-api.ts:16">apis/admin-platform-revenue-api.ts:16</td>
+    </tr>
+    <tr data-text="getPlatformRevenueTransactions /Users/segzy/projects/bashbop-event-web/redux/apis/admin-platform-revenue-api.ts">
+      <td class="dim" colspan="2">getPlatformRevenueTransactions</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/admin-platform-revenue-api.ts:30">apis/admin-platform-revenue-api.ts:30</td>
+    </tr>
+    <tr data-text="getAffiliateCommissions /Users/segzy/projects/bashbop-event-web/redux/apis/affiliate-api.ts">
+      <td class="dim" colspan="2">getAffiliateCommissions</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/affiliate-api.ts:65">apis/affiliate-api.ts:65</td>
+    </tr>
+    <tr data-text="listAvailableSources /Users/segzy/projects/bashbop-event-web/redux/apis/audience-api.ts">
+      <td class="dim" colspan="2">listAvailableSources</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/audience-api.ts:220">apis/audience-api.ts:220</td>
+    </tr>
+    <tr data-text="getPosts /Users/segzy/projects/bashbop-event-web/redux/apis/blog-api.ts">
+      <td class="dim" colspan="2">getPosts</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/blog-api.ts:32">apis/blog-api.ts:32</td>
+    </tr>
+    <tr data-text="searchPosts /Users/segzy/projects/bashbop-event-web/redux/apis/blog-api.ts">
+      <td class="dim" colspan="2">searchPosts</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/blog-api.ts:83">apis/blog-api.ts:83</td>
+    </tr>
+    <tr data-text="getBookmarks /Users/segzy/projects/bashbop-event-web/redux/apis/blog-api.ts">
+      <td class="dim" colspan="2">getBookmarks</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/blog-api.ts:187">apis/blog-api.ts:187</td>
+    </tr>
+    <tr data-text="getPopularTags /Users/segzy/projects/bashbop-event-web/redux/apis/blog-api.ts">
+      <td class="dim" colspan="2">getPopularTags</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/blog-api.ts:245">apis/blog-api.ts:245</td>
+    </tr>
+    <tr data-text="getMyPosts /Users/segzy/projects/bashbop-event-web/redux/apis/blog-api.ts">
+      <td class="dim" colspan="2">getMyPosts</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/blog-api.ts:250">apis/blog-api.ts:250</td>
+    </tr>
+    <tr data-text="getAuthorPosts /Users/segzy/projects/bashbop-event-web/redux/apis/blog-api.ts">
+      <td class="dim" colspan="2">getAuthorPosts</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/blog-api.ts:271">apis/blog-api.ts:271</td>
+    </tr>
+    <tr data-text="getEnquiries /Users/segzy/projects/bashbop-event-web/redux/apis/enquiry-api.ts">
+      <td class="dim" colspan="2">getEnquiries</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/enquiry-api.ts:44">apis/enquiry-api.ts:44</td>
+    </tr>
+    <tr data-text="getFoundingVendorApplicants /Users/segzy/projects/bashbop-event-web/redux/apis/founding-vendor-api.ts">
+      <td class="dim" colspan="2">getFoundingVendorApplicants</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/founding-vendor-api.ts:51">apis/founding-vendor-api.ts:51</td>
+    </tr>
+    <tr data-text="getVendorQuotes /Users/segzy/projects/bashbop-event-web/redux/apis/quote-api.ts">
+      <td class="dim" colspan="2">getVendorQuotes</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/quote-api.ts:86">apis/quote-api.ts:86</td>
+    </tr>
+    <tr data-text="getReceivedQuotes /Users/segzy/projects/bashbop-event-web/redux/apis/quote-api.ts">
+      <td class="dim" colspan="2">getReceivedQuotes</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/quote-api.ts:99">apis/quote-api.ts:99</td>
+    </tr>
+    <tr data-text="changePassword /Users/segzy/projects/bashbop-event-web/redux/apis/user-api.ts">
+      <td class="dim" colspan="2">changePassword</td>
+      <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-event-web/redux/apis/user-api.ts:177">apis/user-api.ts:177</td>
+    </tr></tbody></table>
+  </section>
+
+  <section class="panel">
+    <h2>Unused backend routes <span class="count mute">278</span></h2>
+    <p class="hint">Backend routes no resolvable frontend call reaches (may be webhooks, admin, or other clients).</p>
+    <input class="filter" placeholder="Filter 278 rows…" oninput="filterRows(this)">
+    <table><tbody>
+    <tr data-text="GET admin/logs">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/admin/logs</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/admin-logs/admin-logs.controller.ts:37">admin-logs/admin-logs.controller.ts:37</td>
+    </tr>
+    <tr data-text="GET admin/logs/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/admin/logs/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/admin-logs/admin-logs.controller.ts:58">admin-logs/admin-logs.controller.ts:58</td>
+    </tr>
+    <tr data-text="GET admin/logs/{}/stats">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/admin/logs/{}/stats</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/admin-logs/admin-logs.controller.ts:168">admin-logs/admin-logs.controller.ts:168</td>
+    </tr>
+    <tr data-text="POST admin/logs/{}/clear">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/admin/logs/{}/clear</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/admin-logs/admin-logs.controller.ts:210">admin-logs/admin-logs.controller.ts:210</td>
+    </tr>
+    <tr data-text="GET admin/logs/search/all">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/admin/logs/search/all</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/admin-logs/admin-logs.controller.ts:243">admin-logs/admin-logs.controller.ts:243</td>
+    </tr>
+    <tr data-text="GET admin/logs/viewer/ui">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/admin/logs/viewer/ui</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/admin-logs/admin-logs.controller.ts:296">admin-logs/admin-logs.controller.ts:296</td>
+    </tr>
+    <tr data-text="GET affiliates/commissions">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/affiliates/commissions</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/affiliates/affiliates.controller.ts:76">affiliates/affiliates.controller.ts:76</td>
+    </tr>
+    <tr data-text="POST ai/generate-content">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/ai/generate-content</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/ai.controller.ts:37">ai/ai.controller.ts:37</td>
+    </tr>
+    <tr data-text="GET ai/cost-analytics/summary">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/cost-analytics/summary</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/ai-cost-analytics.controller.ts:28">controllers/ai-cost-analytics.controller.ts:28</td>
+    </tr>
+    <tr data-text="GET ai/cost-analytics/user/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/cost-analytics/user/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/ai-cost-analytics.controller.ts:54">controllers/ai-cost-analytics.controller.ts:54</td>
+    </tr>
+    <tr data-text="GET ai/cost-analytics/my-report">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/cost-analytics/my-report</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/ai-cost-analytics.controller.ts:83">controllers/ai-cost-analytics.controller.ts:83</td>
+    </tr>
+    <tr data-text="GET ai/cost-analytics/alerts">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/cost-analytics/alerts</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/ai-cost-analytics.controller.ts:103">controllers/ai-cost-analytics.controller.ts:103</td>
+    </tr>
+    <tr data-text="GET ai/cost-analytics/real-time">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/cost-analytics/real-time</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/ai-cost-analytics.controller.ts:118">controllers/ai-cost-analytics.controller.ts:118</td>
+    </tr>
+    <tr data-text="GET ai/cost-analytics/financial-report">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/cost-analytics/financial-report</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/ai-cost-analytics.controller.ts:133">controllers/ai-cost-analytics.controller.ts:133</td>
+    </tr>
+    <tr data-text="GET ai/cost-analytics/dashboard">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/cost-analytics/dashboard</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/ai-cost-analytics.controller.ts:148">controllers/ai-cost-analytics.controller.ts:148</td>
+    </tr>
+    <tr data-text="GET ai/cost-analytics/trends">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/cost-analytics/trends</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/ai-cost-analytics.controller.ts:174">controllers/ai-cost-analytics.controller.ts:174</td>
+    </tr>
+    <tr data-text="GET ai/bashcoin/info">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/bashcoin/info</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/bashcoin-quota.controller.ts:37">controllers/bashcoin-quota.controller.ts:37</td>
+    </tr>
+    <tr data-text="POST ai/bashcoin/convert">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/ai/bashcoin/convert</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/bashcoin-quota.controller.ts:52">controllers/bashcoin-quota.controller.ts:52</td>
+    </tr>
+    <tr data-text="POST ai/bashcoin/emergency-boost">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/ai/bashcoin/emergency-boost</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/bashcoin-quota.controller.ts:77">controllers/bashcoin-quota.controller.ts:77</td>
+    </tr>
+    <tr data-text="GET ai/bashcoin/transactions">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/bashcoin/transactions</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/bashcoin-quota.controller.ts:102">controllers/bashcoin-quota.controller.ts:102</td>
+    </tr>
+    <tr data-text="GET ai/bashcoin/rewards">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/bashcoin/rewards</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/bashcoin-quota.controller.ts:132">controllers/bashcoin-quota.controller.ts:132</td>
+    </tr>
+    <tr data-text="GET ai/bashcoin/calculate">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/bashcoin/calculate</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/bashcoin-quota.controller.ts:150">controllers/bashcoin-quota.controller.ts:150</td>
+    </tr>
+    <tr data-text="GET ai/bashcoin/pricing">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/bashcoin/pricing</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/bashcoin-quota.controller.ts:183">controllers/bashcoin-quota.controller.ts:183</td>
+    </tr>
+    <tr data-text="POST ai/conversational-event/create">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/ai/conversational-event/create</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/conversational-event.controller.ts:40">controllers/conversational-event.controller.ts:40</td>
+    </tr>
+    <tr data-text="POST ai/event-assistant/generate-title">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/ai/event-assistant/generate-title</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/event-assistant.controller.ts:27">controllers/event-assistant.controller.ts:27</td>
+    </tr>
+    <tr data-text="POST ai/public-support-assistant">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/ai/public-support-assistant</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/mascot-assistant.controller.ts:36">controllers/mascot-assistant.controller.ts:36</td>
+    </tr>
+    <tr data-text="POST ai/mascot-assistant">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/ai/mascot-assistant</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/mascot-assistant.controller.ts:93">controllers/mascot-assistant.controller.ts:93</td>
+    </tr>
+    <tr data-text="GET ai/my-usage/summary">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/my-usage/summary</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/user-ai-usage.controller.ts:27">controllers/user-ai-usage.controller.ts:27</td>
+    </tr>
+    <tr data-text="GET ai/my-usage/history">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/my-usage/history</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/user-ai-usage.controller.ts:62">controllers/user-ai-usage.controller.ts:62</td>
+    </tr>
+    <tr data-text="GET ai/my-usage/insights">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/my-usage/insights</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/user-ai-usage.controller.ts:88">controllers/user-ai-usage.controller.ts:88</td>
+    </tr>
+    <tr data-text="GET ai/my-usage/forecast">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/my-usage/forecast</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/user-ai-usage.controller.ts:116">controllers/user-ai-usage.controller.ts:116</td>
+    </tr>
+    <tr data-text="POST ai/my-usage/request-budget-increase">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/ai/my-usage/request-budget-increase</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/user-ai-usage.controller.ts:143">controllers/user-ai-usage.controller.ts:143</td>
+    </tr>
+    <tr data-text="GET ai/my-usage/tips">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/my-usage/tips</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/user-ai-usage.controller.ts:176">controllers/user-ai-usage.controller.ts:176</td>
+    </tr>
+    <tr data-text="GET ai/quota/config">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/quota/config</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/user-quota.controller.ts:42">controllers/user-quota.controller.ts:42</td>
+    </tr>
+    <tr data-text="GET ai/quota/status">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/quota/status</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/user-quota.controller.ts:67">controllers/user-quota.controller.ts:67</td>
+    </tr>
+    <tr data-text="GET ai/quota/usage-stats">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/quota/usage-stats</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/user-quota.controller.ts:105">controllers/user-quota.controller.ts:105</td>
+    </tr>
+    <tr data-text="GET ai/quota/check-request-cost">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/quota/check-request-cost</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/ai/controllers/user-quota.controller.ts:152">controllers/user-quota.controller.ts:152</td>
+    </tr>
+    <tr data-text="POST analytics/ga4">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/analytics/ga4</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/analytics/analytics.controller.ts:18">analytics/analytics.controller.ts:18</td>
+    </tr>
+    <tr data-text="GET ">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/app.controller.ts:9">src/app.controller.ts:9</td>
+    </tr>
+    <tr data-text="GET auth/google">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/auth/google</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:144">authentication/auth.controller.ts:144</td>
+    </tr>
+    <tr data-text="GET auth/google-callback">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/auth/google-callback</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:198">authentication/auth.controller.ts:198</td>
+    </tr>
+    <tr data-text="GET auth/google-callback-with-popup">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/auth/google-callback-with-popup</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:225">authentication/auth.controller.ts:225</td>
+    </tr>
+    <tr data-text="POST auth/mobile-google-session">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/mobile-google-session</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:252">authentication/auth.controller.ts:252</td>
+    </tr>
+    <tr data-text="POST auth/mobile-apple-session">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/mobile-apple-session</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:313">authentication/auth.controller.ts:313</td>
+    </tr>
+    <tr data-text="POST auth/login">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/login</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:483">authentication/auth.controller.ts:483</td>
+    </tr>
+    <tr data-text="POST auth/logout">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/logout</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:740">authentication/auth.controller.ts:740</td>
+    </tr>
+    <tr data-text="GET auth/me">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/auth/me</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:785">authentication/auth.controller.ts:785</td>
+    </tr>
+    <tr data-text="POST auth/register">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/register</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:838">authentication/auth.controller.ts:838</td>
+    </tr>
+    <tr data-text="POST auth/validate-otp">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/validate-otp</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:909">authentication/auth.controller.ts:909</td>
+    </tr>
+    <tr data-text="POST auth/reset-password/signed-in">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/reset-password/signed-in</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:1080">authentication/auth.controller.ts:1080</td>
+    </tr>
+    <tr data-text="POST auth/reset-password">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/reset-password</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:1142">authentication/auth.controller.ts:1142</td>
+    </tr>
+    <tr data-text="POST auth/reset-password/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/reset-password/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:1142">authentication/auth.controller.ts:1142</td>
+    </tr>
+    <tr data-text="POST auth/claim-guest-account">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/claim-guest-account</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:1185">authentication/auth.controller.ts:1185</td>
+    </tr>
+    <tr data-text="GET auth/check-2fa-status">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/auth/check-2fa-status</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:1234">authentication/auth.controller.ts:1234</td>
+    </tr>
+    <tr data-text="POST auth/clear-2fa-session">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/clear-2fa-session</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:1310">authentication/auth.controller.ts:1310</td>
+    </tr>
+    <tr data-text="POST auth/create-partial">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/create-partial</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:1339">authentication/auth.controller.ts:1339</td>
+    </tr>
+    <tr data-text="POST auth/find-my-events">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/find-my-events</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:1547">authentication/auth.controller.ts:1547</td>
+    </tr>
+    <tr data-text="POST auth/verify-events-otp">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/verify-events-otp</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:1590">authentication/auth.controller.ts:1590</td>
+    </tr>
+    <tr data-text="POST auth/passkey/register-begin">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/passkey/register-begin</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:2302">authentication/auth.controller.ts:2302</td>
+    </tr>
+    <tr data-text="POST auth/passkey/register-finish">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/passkey/register-finish</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:2312">authentication/auth.controller.ts:2312</td>
+    </tr>
+    <tr data-text="POST auth/passkey/authenticate-begin">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/passkey/authenticate-begin</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:2337">authentication/auth.controller.ts:2337</td>
+    </tr>
+    <tr data-text="POST auth/passkey/authenticate-finish">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/auth/passkey/authenticate-finish</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:2347">authentication/auth.controller.ts:2347</td>
+    </tr>
+    <tr data-text="GET auth/passkey/credentials">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/auth/passkey/credentials</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:2385">authentication/auth.controller.ts:2385</td>
+    </tr>
+    <tr data-text="DELETE auth/passkey/credentials/{}">
+      <td><span class="verb DELETE">DELETE</span></td>
+      <td class="path" colspan="3">/auth/passkey/credentials/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/authentication/auth.controller.ts:2395">authentication/auth.controller.ts:2395</td>
+    </tr>
+    <tr data-text="GET bash-stream/create-call">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bash-stream/create-call</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/bash-stream/bash-stream.controller.ts:45">bash-stream/bash-stream.controller.ts:45</td>
+    </tr>
+    <tr data-text="GET bash-stream/get-user-token">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bash-stream/get-user-token</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/bash-stream/bash-stream.controller.ts:80">bash-stream/bash-stream.controller.ts:80</td>
+    </tr>
+    <tr data-text="POST bash-stream/create-livestream/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bash-stream/create-livestream/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/bash-stream/bash-stream.controller.ts:118">bash-stream/bash-stream.controller.ts:118</td>
+    </tr>
+    <tr data-text="POST bash-stream/start-livestream/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bash-stream/start-livestream/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/bash-stream/bash-stream.controller.ts:149">bash-stream/bash-stream.controller.ts:149</td>
+    </tr>
+    <tr data-text="POST bash-stream/stop-livestream/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bash-stream/stop-livestream/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/bash-stream/bash-stream.controller.ts:172">bash-stream/bash-stream.controller.ts:172</td>
+    </tr>
+    <tr data-text="GET bash-stream/livestream-status/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bash-stream/livestream-status/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/bash-stream/bash-stream.controller.ts:198">bash-stream/bash-stream.controller.ts:198</td>
+    </tr>
+    <tr data-text="POST bash-stream/join-meeting/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bash-stream/join-meeting/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/bash-stream/bash-stream.controller.ts:214">bash-stream/bash-stream.controller.ts:214</td>
+    </tr>
+    <tr data-text="POST bash-stream/create-chat-channel/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bash-stream/create-chat-channel/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/bash-stream/bash-stream.controller.ts:289">bash-stream/bash-stream.controller.ts:289</td>
+    </tr>
+    <tr data-text="GET bash-stream/recordings/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bash-stream/recordings/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/bash-stream/bash-stream.controller.ts:328">bash-stream/bash-stream.controller.ts:328</td>
+    </tr>
+    <tr data-text="POST bash-stream/start-recording/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bash-stream/start-recording/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/bash-stream/bash-stream.controller.ts:351">bash-stream/bash-stream.controller.ts:351</td>
+    </tr>
+    <tr data-text="POST bash-stream/stop-recording/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bash-stream/stop-recording/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/bash-stream/bash-stream.controller.ts:370">bash-stream/bash-stream.controller.ts:370</td>
+    </tr>
+    <tr data-text="POST bash-stream/delete-livestream/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bash-stream/delete-livestream/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/bash-stream/bash-stream.controller.ts:388">bash-stream/bash-stream.controller.ts:388</td>
+    </tr>
+    <tr data-text="GET blog/posts">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/blog/posts</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/blog/blog.controller.ts:42">blog/blog.controller.ts:42</td>
+    </tr>
+    <tr data-text="GET blog/posts/search">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/blog/posts/search</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/blog/blog.controller.ts:91">blog/blog.controller.ts:91</td>
+    </tr>
+    <tr data-text="GET blog/tags/popular">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/blog/tags/popular</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/blog/blog.controller.ts:196">blog/blog.controller.ts:196</td>
+    </tr>
+    <tr data-text="GET blog/authors/{}/posts">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/blog/authors/{}/posts</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/blog/blog.controller.ts:240">blog/blog.controller.ts:240</td>
+    </tr>
+    <tr data-text="GET blog/my-posts">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/blog/my-posts</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/blog/blog.controller.ts:311">blog/blog.controller.ts:311</td>
+    </tr>
+    <tr data-text="GET blog/bookmarks">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/blog/bookmarks</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/blog/blog.controller.ts:337">blog/blog.controller.ts:337</td>
+    </tr>
+    <tr data-text="GET bookings/fee-config">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/fee-config</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:514">booking/booking.controller.ts:514</td>
+    </tr>
+    <tr data-text="POST bookings/calculate-precise-fees">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bookings/calculate-precise-fees</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:534">booking/booking.controller.ts:534</td>
+    </tr>
+    <tr data-text="GET bookings/{}/confirm">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/{}/confirm</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:2462">booking/booking.controller.ts:2462</td>
+    </tr>
+    <tr data-text="GET bookings/recover/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/recover/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:2547">booking/booking.controller.ts:2547</td>
+    </tr>
+    <tr data-text="GET bookings/recovery-stats">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/recovery-stats</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:2683">booking/booking.controller.ts:2683</td>
+    </tr>
+    <tr data-text="GET bookings/my-recovery-stats">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/my-recovery-stats</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:2694">booking/booking.controller.ts:2694</td>
+    </tr>
+    <tr data-text="POST bookings/refund">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bookings/refund</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:3788">booking/booking.controller.ts:3788</td>
+    </tr>
+    <tr data-text="POST bookings/create">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bookings/create</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:3978">booking/booking.controller.ts:3978</td>
+    </tr>
+    <tr data-text="POST bookings/checkout">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bookings/checkout</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:4050">booking/booking.controller.ts:4050</td>
+    </tr>
+    <tr data-text="GET bookings/session/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/session/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:4073">booking/booking.controller.ts:4073</td>
+    </tr>
+    <tr data-text="POST bookings/scan">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bookings/scan</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:4876">booking/booking.controller.ts:4876</td>
+    </tr>
+    <tr data-text="POST bookings/admin/{}/items">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bookings/admin/{}/items</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:5247">booking/booking.controller.ts:5247</td>
+    </tr>
+    <tr data-text="GET bookings/admin/{}/validate-payment-integrity">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/admin/{}/validate-payment-integrity</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:5292">booking/booking.controller.ts:5292</td>
+    </tr>
+    <tr data-text="GET bookings/{}/payment-record">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/{}/payment-record</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:5339">booking/booking.controller.ts:5339</td>
+    </tr>
+    <tr data-text="GET bookings/tickets/{}/download">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/tickets/{}/download</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:5488">booking/booking.controller.ts:5488</td>
+    </tr>
+    <tr data-text="GET bookings/tickets/{}/preview">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/tickets/{}/preview</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:5596">booking/booking.controller.ts:5596</td>
+    </tr>
+    <tr data-text="GET bookings/stripe-breakdown/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/stripe-breakdown/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:5676">booking/booking.controller.ts:5676</td>
+    </tr>
+    <tr data-text="GET bookings/cleanup/dashboard">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/cleanup/dashboard</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:5944">booking/booking.controller.ts:5944</td>
+    </tr>
+    <tr data-text="GET bookings/cleanup/stats">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/cleanup/stats</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:6056">booking/booking.controller.ts:6056</td>
+    </tr>
+    <tr data-text="POST bookings/cleanup/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/bookings/cleanup/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:6105">booking/booking.controller.ts:6105</td>
+    </tr>
+    <tr data-text="GET bookings/cleanup/health">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/bookings/cleanup/health</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/booking/booking.controller.ts:6169">booking/booking.controller.ts:6169</td>
+    </tr>
+    <tr data-text="GET chart-data/user-dashboard-v2">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/chart-data/user-dashboard-v2</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/chart-data/chart-data.controller.ts:69">chart-data/chart-data.controller.ts:69</td>
+    </tr>
+    <tr data-text="GET chart-data/debug/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/chart-data/debug/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/chart-data/chart-data.controller.ts:144">chart-data/chart-data.controller.ts:144</td>
+    </tr>
+    <tr data-text="GET chart-data/debug-user-events">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/chart-data/debug-user-events</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/chart-data/chart-data.controller.ts:173">chart-data/chart-data.controller.ts:173</td>
+    </tr>
+    <tr data-text="GET chart-data/investigate-guests/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/chart-data/investigate-guests/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/chart-data/chart-data.controller.ts:218">chart-data/chart-data.controller.ts:218</td>
+    </tr>
+    <tr data-text="GET chart-data/investigate-all-guests">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/chart-data/investigate-all-guests</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/chart-data/chart-data.controller.ts:256">chart-data/chart-data.controller.ts:256</td>
+    </tr>
+    <tr data-text="POST chart-data/cleanup-guests/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/chart-data/cleanup-guests/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/chart-data/chart-data.controller.ts:281">chart-data/chart-data.controller.ts:281</td>
+    </tr>
+    <tr data-text="GET chart-data/admin-dashboard">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/chart-data/admin-dashboard</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/chart-data/chart-data.controller.ts:322">chart-data/chart-data.controller.ts:322</td>
+    </tr>
+    <tr data-text="GET chart-data/enhanced-analytics/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/chart-data/enhanced-analytics/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/chart-data/chart-data.controller.ts:337">chart-data/chart-data.controller.ts:337</td>
+    </tr>
+    <tr data-text="POST ai/generate-description">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/ai/generate-description</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/cloudflare-ai/cloudflare-ai.controller.ts:15">cloudflare-ai/cloudflare-ai.controller.ts:15</td>
+    </tr>
+    <tr data-text="GET ai/generate-description">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/generate-description</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/cloudflare-ai/cloudflare-ai.controller.ts:23">cloudflare-ai/cloudflare-ai.controller.ts:23</td>
+    </tr>
+    <tr data-text="POST ai/generate-image">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/ai/generate-image</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/cloudflare-ai/cloudflare-ai.controller.ts:42">cloudflare-ai/cloudflare-ai.controller.ts:42</td>
+    </tr>
+    <tr data-text="GET ai/generate-image">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/ai/generate-image</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/cloudflare-ai/cloudflare-ai.controller.ts:52">cloudflare-ai/cloudflare-ai.controller.ts:52</td>
+    </tr>
+    <tr data-text="POST ai/generate-event-content">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/ai/generate-event-content</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/cloudflare-ai/cloudflare-ai.controller.ts:74">cloudflare-ai/cloudflare-ai.controller.ts:74</td>
+    </tr>
+    <tr data-text="POST compliance/analyze-content">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/compliance/analyze-content</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/compliance/compliance.controller.ts:27">compliance/compliance.controller.ts:27</td>
+    </tr>
+    <tr data-text="POST compliance/submit-report">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/compliance/submit-report</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/compliance/compliance.controller.ts:70">compliance/compliance.controller.ts:70</td>
+    </tr>
+    <tr data-text="GET compliance/moderation-queue">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/compliance/moderation-queue</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/compliance/compliance.controller.ts:105">compliance/compliance.controller.ts:105</td>
+    </tr>
+    <tr data-text="POST compliance/algorithmic-risk-assessment">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/compliance/algorithmic-risk-assessment</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/compliance/compliance.controller.ts:133">compliance/compliance.controller.ts:133</td>
+    </tr>
+    <tr data-text="POST compliance/generate-compliance-report">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/compliance/generate-compliance-report</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/compliance/compliance.controller.ts:184">compliance/compliance.controller.ts:184</td>
+    </tr>
+    <tr data-text="GET compliance/reports/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/compliance/reports/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/compliance/compliance.controller.ts:229">compliance/compliance.controller.ts:229</td>
+    </tr>
+    <tr data-text="GET compliance/dashboard-stats">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/compliance/dashboard-stats</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/compliance/compliance.controller.ts:264">compliance/compliance.controller.ts:264</td>
+    </tr>
+    <tr data-text="POST contracts/templates">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/contracts/templates</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/contracts/contracts.controller.ts:360">contracts/contracts.controller.ts:360</td>
+    </tr>
+    <tr data-text="PUT contracts/templates/{}">
+      <td><span class="verb PUT">PUT</span></td>
+      <td class="path" colspan="3">/contracts/templates/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/contracts/contracts.controller.ts:383">contracts/contracts.controller.ts:383</td>
+    </tr>
+    <tr data-text="DELETE contracts/templates/{}">
+      <td><span class="verb DELETE">DELETE</span></td>
+      <td class="path" colspan="3">/contracts/templates/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/contracts/contracts.controller.ts:408">contracts/contracts.controller.ts:408</td>
+    </tr>
+    <tr data-text="POST contracts/templates/{}/set-default">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/contracts/templates/{}/set-default</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/contracts/contracts.controller.ts:427">contracts/contracts.controller.ts:427</td>
+    </tr>
+    <tr data-text="GET contracts/templates">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/contracts/templates</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/contracts/contracts.controller.ts:450">contracts/contracts.controller.ts:450</td>
+    </tr>
+    <tr data-text="GET contracts/templates/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/contracts/templates/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/contracts/contracts.controller.ts:466">contracts/contracts.controller.ts:466</td>
+    </tr>
+    <tr data-text="POST theme">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/theme</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/controllers/theme.controller.ts:51">controllers/theme.controller.ts:51</td>
+    </tr>
+    <tr data-text="GET theme">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/theme</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/controllers/theme.controller.ts:83">controllers/theme.controller.ts:83</td>
+    </tr>
+    <tr data-text="GET theme/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/theme/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/controllers/theme.controller.ts:111">controllers/theme.controller.ts:111</td>
+    </tr>
+    <tr data-text="PUT theme/{}">
+      <td><span class="verb PUT">PUT</span></td>
+      <td class="path" colspan="3">/theme/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/controllers/theme.controller.ts:137">controllers/theme.controller.ts:137</td>
+    </tr>
+    <tr data-text="DELETE theme/{}">
+      <td><span class="verb DELETE">DELETE</span></td>
+      <td class="path" colspan="3">/theme/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/controllers/theme.controller.ts:173">controllers/theme.controller.ts:173</td>
+    </tr>
+    <tr data-text="GET csrf/token">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/csrf/token</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/csrf/csrf.controller.ts:8">csrf/csrf.controller.ts:8</td>
+    </tr>
+    <tr data-text="POST email-status/brevo/webhook">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/email-status/brevo/webhook</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/email/email-status.controller.ts:39">email/email-status.controller.ts:39</td>
+    </tr>
+    <tr data-text="GET enquiries">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/enquiries</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/enquiries/enquiries.controller.ts:63">enquiries/enquiries.controller.ts:63</td>
+    </tr>
+    <tr data-text="GET event-audience/available-sources/list">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event-audience/available-sources/list</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/event-audience/event-audience.controller.ts:151">event-audience/event-audience.controller.ts:151</td>
+    </tr>
+    <tr data-text="GET audience/unsubscribe/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/audience/unsubscribe/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/event-audience/event-audience.controller.ts:242">event-audience/event-audience.controller.ts:242</td>
+    </tr>
+    <tr data-text="POST event-vendor">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/event-vendor</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/event-vendor/event-vendor.controller.ts:167">event-vendor/event-vendor.controller.ts:167</td>
+    </tr>
+    <tr data-text="PATCH event-vendor/{}">
+      <td><span class="verb PATCH">PATCH</span></td>
+      <td class="path" colspan="3">/event-vendor/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/event-vendor/event-vendor.controller.ts:200">event-vendor/event-vendor.controller.ts:200</td>
+    </tr>
+    <tr data-text="DELETE event-vendor/{}">
+      <td><span class="verb DELETE">DELETE</span></td>
+      <td class="path" colspan="3">/event-vendor/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/event-vendor/event-vendor.controller.ts:237">event-vendor/event-vendor.controller.ts:237</td>
+    </tr>
+    <tr data-text="POST event-vendor/search">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/event-vendor/search</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/event-vendor/event-vendor.controller.ts:265">event-vendor/event-vendor.controller.ts:265</td>
+    </tr>
+    <tr data-text="POST dummy-events/create">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/dummy-events/create</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/dummy-events.controller.ts:49">events/dummy-events.controller.ts:49</td>
+    </tr>
+    <tr data-text="GET dummy-events/templates">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/dummy-events/templates</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/dummy-events.controller.ts:259">events/dummy-events.controller.ts:259</td>
+    </tr>
+    <tr data-text="POST dummy-events/template/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/dummy-events/template/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/dummy-events.controller.ts:315">events/dummy-events.controller.ts:315</td>
+    </tr>
+    <tr data-text="GET event/getAllEvents">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/getAllEvents</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:146">events/events.controller.ts:146</td>
+    </tr>
+    <tr data-text="GET event/by-proximity">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/by-proximity</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:223">events/events.controller.ts:223</td>
+    </tr>
+    <tr data-text="GET event/getEvent/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/getEvent/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:451">events/events.controller.ts:451</td>
+    </tr>
+    <tr data-text="GET event/wild-search">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/wild-search</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:475">events/events.controller.ts:475</td>
+    </tr>
+    <tr data-text="GET event/clear-expired">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/clear-expired</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:510">events/events.controller.ts:510</td>
+    </tr>
+    <tr data-text="GET event/with-video">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/with-video</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:558">events/events.controller.ts:558</td>
+    </tr>
+    <tr data-text="GET event/getPublicEvent/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/getPublicEvent/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:615">events/events.controller.ts:615</td>
+    </tr>
+    <tr data-text="GET event/by-category/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/by-category/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:647">events/events.controller.ts:647</td>
+    </tr>
+    <tr data-text="GET event/sitemap">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/sitemap</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:681">events/events.controller.ts:681</td>
+    </tr>
+    <tr data-text="GET event/similar">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/similar</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:709">events/events.controller.ts:709</td>
+    </tr>
+    <tr data-text="GET event/popular">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/popular</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:748">events/events.controller.ts:748</td>
+    </tr>
+    <tr data-text="GET event/info/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/info/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:785">events/events.controller.ts:785</td>
+    </tr>
+    <tr data-text="GET event/preview/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/preview/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:821">events/events.controller.ts:821</td>
+    </tr>
+    <tr data-text="DELETE event/delete/{}">
+      <td><span class="verb DELETE">DELETE</span></td>
+      <td class="path" colspan="3">/event/delete/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:1754">events/events.controller.ts:1754</td>
+    </tr>
+    <tr data-text="DELETE event/admin/delete/{}">
+      <td><span class="verb DELETE">DELETE</span></td>
+      <td class="path" colspan="3">/event/admin/delete/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:1796">events/events.controller.ts:1796</td>
+    </tr>
+    <tr data-text="GET event/with-timezone">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/with-timezone</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:1966">events/events.controller.ts:1966</td>
+    </tr>
+    <tr data-text="GET event/admin/all-events-summary">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/admin/all-events-summary</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:2658">events/events.controller.ts:2658</td>
+    </tr>
+    <tr data-text="PATCH event/admin/update-status/{}">
+      <td><span class="verb PATCH">PATCH</span></td>
+      <td class="path" colspan="3">/event/admin/update-status/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:2837">events/events.controller.ts:2837</td>
+    </tr>
+    <tr data-text="DELETE event/admin/delete/{}">
+      <td><span class="verb DELETE">DELETE</span></td>
+      <td class="path" colspan="3">/event/admin/delete/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:2919">events/events.controller.ts:2919</td>
+    </tr>
+    <tr data-text="DELETE event/admin/force-delete/{}">
+      <td><span class="verb DELETE">DELETE</span></td>
+      <td class="path" colspan="3">/event/admin/force-delete/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:2996">events/events.controller.ts:2996</td>
+    </tr>
+    <tr data-text="GET event/ticket-sales-analysis/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/event/ticket-sales-analysis/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:3099">events/events.controller.ts:3099</td>
+    </tr>
+    <tr data-text="POST event/admin/send-announcement">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/event/admin/send-announcement</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/events/events.controller.ts:3230">events/events.controller.ts:3230</td>
+    </tr>
+    <tr data-text="GET excel/guest-list/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/excel/guest-list/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/excel/excel.controller.ts:44">excel/excel.controller.ts:44</td>
+    </tr>
+    <tr data-text="GET feature-flags">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/feature-flags</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/feature-flags/feature-flag.controller.ts:47">feature-flags/feature-flag.controller.ts:47</td>
+    </tr>
+    <tr data-text="GET feature-flags/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/feature-flags/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/feature-flags/feature-flag.controller.ts:77">feature-flags/feature-flag.controller.ts:77</td>
+    </tr>
+    <tr data-text="POST feature-flags/{}/evaluate">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/feature-flags/{}/evaluate</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/feature-flags/feature-flag.controller.ts:90">feature-flags/feature-flag.controller.ts:90</td>
+    </tr>
+    <tr data-text="POST feature-flags">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/feature-flags</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/feature-flags/feature-flag.controller.ts:121">feature-flags/feature-flag.controller.ts:121</td>
+    </tr>
+    <tr data-text="PUT feature-flags/{}">
+      <td><span class="verb PUT">PUT</span></td>
+      <td class="path" colspan="3">/feature-flags/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/feature-flags/feature-flag.controller.ts:133">feature-flags/feature-flag.controller.ts:133</td>
+    </tr>
+    <tr data-text="DELETE feature-flags/{}">
+      <td><span class="verb DELETE">DELETE</span></td>
+      <td class="path" colspan="3">/feature-flags/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/feature-flags/feature-flag.controller.ts:160">feature-flags/feature-flag.controller.ts:160</td>
+    </tr>
+    <tr data-text="GET feature-flags/user/assignments">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/feature-flags/user/assignments</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/feature-flags/feature-flag.controller.ts:172">feature-flags/feature-flag.controller.ts:172</td>
+    </tr>
+    <tr data-text="GET feature-flags/ab-tests">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/feature-flags/ab-tests</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/feature-flags/feature-flag.controller.ts:214">feature-flags/feature-flag.controller.ts:214</td>
+    </tr>
+    <tr data-text="POST feature-flags/ab-tests">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/feature-flags/ab-tests</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/feature-flags/feature-flag.controller.ts:225">feature-flags/feature-flag.controller.ts:225</td>
+    </tr>
+    <tr data-text="GET feature-flags/ab-tests/{}/assignment">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/feature-flags/ab-tests/{}/assignment</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/feature-flags/feature-flag.controller.ts:244">feature-flags/feature-flag.controller.ts:244</td>
+    </tr>
+    <tr data-text="GET feature-flags/user/ab-test-assignments">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/feature-flags/user/ab-test-assignments</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/feature-flags/feature-flag.controller.ts:263">feature-flags/feature-flag.controller.ts:263</td>
+    </tr>
+    <tr data-text="GET feature-flags/health">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/feature-flags/health</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/feature-flags/feature-flag.controller.ts:279">feature-flags/feature-flag.controller.ts:279</td>
+    </tr>
+    <tr data-text="POST feature-flags/reload">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/feature-flags/reload</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/feature-flags/feature-flag.controller.ts:298">feature-flags/feature-flag.controller.ts:298</td>
+    </tr>
+    <tr data-text="GET follow/followers">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/follow/followers</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/follow/follow.controller.ts:83">follow/follow.controller.ts:83</td>
+    </tr>
+    <tr data-text="GET admin/founding-vendors">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/admin/founding-vendors</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/founding-vendor/founding-vendor.controller.ts:32">founding-vendor/founding-vendor.controller.ts:32</td>
+    </tr>
+    <tr data-text="POST gdpr/export-data">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/gdpr/export-data</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/gdpr/gdpr.controller.ts:36">gdpr/gdpr.controller.ts:36</td>
+    </tr>
+    <tr data-text="POST gdpr/delete-account">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/gdpr/delete-account</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/gdpr/gdpr.controller.ts:59">gdpr/gdpr.controller.ts:59</td>
+    </tr>
+    <tr data-text="POST gdpr/cancel-deletion">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/gdpr/cancel-deletion</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/gdpr/gdpr.controller.ts:89">gdpr/gdpr.controller.ts:89</td>
+    </tr>
+    <tr data-text="POST gdpr/data-access-request">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/gdpr/data-access-request</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/gdpr/gdpr.controller.ts:115">gdpr/gdpr.controller.ts:115</td>
+    </tr>
+    <tr data-text="GET gdpr/requests">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/gdpr/requests</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/gdpr/gdpr.controller.ts:137">gdpr/gdpr.controller.ts:137</td>
+    </tr>
+    <tr data-text="GET gdpr/download/{}/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/gdpr/download/{}/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/gdpr/gdpr.controller.ts:155">gdpr/gdpr.controller.ts:155</td>
+    </tr>
+    <tr data-text="POST gen-image/create-image">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/gen-image/create-image</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/gen-image/gen-image.controller.ts:18">gen-image/gen-image.controller.ts:18</td>
+    </tr>
+    <tr data-text="POST guest/rsvp-message/create/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/guest/rsvp-message/create/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/guests/guest.controller.ts:196">guests/guest.controller.ts:196</td>
+    </tr>
+    <tr data-text="GET guest/guest-rsvping/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/guest/guest-rsvping/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/guests/guest.controller.ts:670">guests/guest.controller.ts:670</td>
+    </tr>
+    <tr data-text="PUT guest/update-guest-table-number">
+      <td><span class="verb PUT">PUT</span></td>
+      <td class="path" colspan="3">/guest/update-guest-table-number</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/guests/guest.controller.ts:1183">guests/guest.controller.ts:1183</td>
+    </tr>
+    <tr data-text="PUT guest/rsvp-response/{}">
+      <td><span class="verb PUT">PUT</span></td>
+      <td class="path" colspan="3">/guest/rsvp-response/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/guests/guest.controller.ts:1276">guests/guest.controller.ts:1276</td>
+    </tr>
+    <tr data-text="PUT guest/rsvp-response-open/{}">
+      <td><span class="verb PUT">PUT</span></td>
+      <td class="path" colspan="3">/guest/rsvp-response-open/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/guests/guest.controller.ts:1402">guests/guest.controller.ts:1402</td>
+    </tr>
+    <tr data-text="GET guest/event-rsvp-info/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/guest/event-rsvp-info/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/guests/guest.controller.ts:1503">guests/guest.controller.ts:1503</td>
+    </tr>
+    <tr data-text="GET guest/check-rsvp-status/{}/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/guest/check-rsvp-status/{}/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/guests/guest.controller.ts:1554">guests/guest.controller.ts:1554</td>
+    </tr>
+    <tr data-text="POST guest/event-rsvp-response">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/guest/event-rsvp-response</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/guests/guest.controller.ts:1605">guests/guest.controller.ts:1605</td>
+    </tr>
+    <tr data-text="GET health">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/health</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/health/health.controller.ts:5">health/health.controller.ts:5</td>
+    </tr>
+    <tr data-text="GET image/folders">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/image/folders</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/image/image.controller.ts:77">image/image.controller.ts:77</td>
+    </tr>
+    <tr data-text="POST image/qa-screenshot">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/image/qa-screenshot</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/image/image.controller.ts:230">image/image.controller.ts:230</td>
+    </tr>
+    <tr data-text="DELETE image/delete">
+      <td><span class="verb DELETE">DELETE</span></td>
+      <td class="path" colspan="3">/image/delete</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/image/image.controller.ts:289">image/image.controller.ts:289</td>
+    </tr>
+    <tr data-text="POST invites/createInvite">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/invites/createInvite</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/invites/invites.controller.ts:36">invites/invites.controller.ts:36</td>
+    </tr>
+    <tr data-text="GET invites/user-invites">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/invites/user-invites</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/invites/invites.controller.ts:94">invites/invites.controller.ts:94</td>
+    </tr>
+    <tr data-text="GET organisations/previews/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/organisations/previews/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/organisations/organisations.controller.ts:59">organisations/organisations.controller.ts:59</td>
+    </tr>
+    <tr data-text="GET organisations/public-domain">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/organisations/public-domain</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/organisations/organisations.controller.ts:65">organisations/organisations.controller.ts:65</td>
+    </tr>
+    <tr data-text="GET organisations/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/organisations/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/organisations/organisations.controller.ts:70">organisations/organisations.controller.ts:70</td>
+    </tr>
+    <tr data-text="POST organisations/{}/domains">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/organisations/{}/domains</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/organisations/organisations.controller.ts:112">organisations/organisations.controller.ts:112</td>
+    </tr>
+    <tr data-text="GET organizer-profile/list">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/organizer-profile/list</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/organizer-profile/organizer-profile.controller.ts:17">organizer-profile/organizer-profile.controller.ts:17</td>
+    </tr>
+    <tr data-text="POST payment-history">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/payment-history</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/payment-history/payment-history.controller.ts:63">payment-history/payment-history.controller.ts:63</td>
+    </tr>
+    <tr data-text="GET payment-history/user/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/payment-history/user/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/payment-history/payment-history.controller.ts:76">payment-history/payment-history.controller.ts:76</td>
+    </tr>
+    <tr data-text="GET payment-history/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/payment-history/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/payment-history/payment-history.controller.ts:91">payment-history/payment-history.controller.ts:91</td>
+    </tr>
+    <tr data-text="PUT payment-history/{}">
+      <td><span class="verb PUT">PUT</span></td>
+      <td class="path" colspan="3">/payment-history/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/payment-history/payment-history.controller.ts:107">payment-history/payment-history.controller.ts:107</td>
+    </tr>
+    <tr data-text="DELETE payment-history/{}">
+      <td><span class="verb DELETE">DELETE</span></td>
+      <td class="path" colspan="3">/payment-history/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/payment-history/payment-history.controller.ts:121">payment-history/payment-history.controller.ts:121</td>
+    </tr>
+    <tr data-text="GET payment-history">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/payment-history</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/payment-history/payment-history.controller.ts:132">payment-history/payment-history.controller.ts:132</td>
+    </tr>
+    <tr data-text="POST paystack/webhook">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/paystack/webhook</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/paystack/paystack.controller.ts:196">paystack/paystack.controller.ts:196</td>
+    </tr>
+    <tr data-text="GET presence/online">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/presence/online</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/presence/presence.controller.ts:28">presence/presence.controller.ts:28</td>
+    </tr>
+    <tr data-text="GET presence/user/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/presence/user/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/presence/presence.controller.ts:57">presence/presence.controller.ts:57</td>
+    </tr>
+    <tr data-text="GET profile">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/profile</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/profile/profile.controller.ts:56">profile/profile.controller.ts:56</td>
+    </tr>
+    <tr data-text="PUT profile/service-provider-status/{}">
+      <td><span class="verb PUT">PUT</span></td>
+      <td class="path" colspan="3">/profile/service-provider-status/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/profile/profile.controller.ts:113">profile/profile.controller.ts:113</td>
+    </tr>
+    <tr data-text="POST profile/services/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/profile/services/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/profile/profile.controller.ts:172">profile/profile.controller.ts:172</td>
+    </tr>
+    <tr data-text="DELETE profile/services/{}/{}">
+      <td><span class="verb DELETE">DELETE</span></td>
+      <td class="path" colspan="3">/profile/services/{}/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/profile/profile.controller.ts:219">profile/profile.controller.ts:219</td>
+    </tr>
+    <tr data-text="GET profile/services/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/profile/services/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/profile/profile.controller.ts:278">profile/profile.controller.ts:278</td>
+    </tr>
+    <tr data-text="GET profile/availability/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/profile/availability/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/profile/profile.controller.ts:392">profile/profile.controller.ts:392</td>
+    </tr>
+    <tr data-text="GET profile/analyze-profile">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/profile/analyze-profile</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/profile/profile.controller.ts:859">profile/profile.controller.ts:859</td>
+    </tr>
+    <tr data-text="POST quotes/{}/view">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/quotes/{}/view</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/quotes/quotes.controller.ts:79">quotes/quotes.controller.ts:79</td>
+    </tr>
+    <tr data-text="GET quotes">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/quotes</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/quotes/quotes.controller.ts:116">quotes/quotes.controller.ts:116</td>
+    </tr>
+    <tr data-text="GET quotes/received">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/quotes/received</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/quotes/quotes.controller.ts:144">quotes/quotes.controller.ts:144</td>
+    </tr>
+    <tr data-text="GET quotes/stats">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/quotes/stats</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/quotes/quotes.controller.ts:167">quotes/quotes.controller.ts:167</td>
+    </tr>
+    <tr data-text="GET recommendations/vendors/public">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/recommendations/vendors/public</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/recommendations/recommendations.controller.ts:41">recommendations/recommendations.controller.ts:41</td>
+    </tr>
+    <tr data-text="GET recommendations/vendors">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/recommendations/vendors</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/recommendations/recommendations.controller.ts:66">recommendations/recommendations.controller.ts:66</td>
+    </tr>
+    <tr data-text="GET recommendations/analytics/vendor/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/recommendations/analytics/vendor/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/recommendations/recommendations.controller.ts:78">recommendations/recommendations.controller.ts:78</td>
+    </tr>
+    <tr data-text="GET recommendations/analytics/market">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/recommendations/analytics/market</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/recommendations/recommendations.controller.ts:85">recommendations/recommendations.controller.ts:85</td>
+    </tr>
+    <tr data-text="POST recommendations/vendors/ai-search">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/recommendations/vendors/ai-search</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/recommendations/recommendations.controller.ts:92">recommendations/recommendations.controller.ts:92</td>
+    </tr>
+    <tr data-text="GET recommendations/vendors/smart">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/recommendations/vendors/smart</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/recommendations/recommendations.controller.ts:109">recommendations/recommendations.controller.ts:109</td>
+    </tr>
+    <tr data-text="GET review/get-reviews/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/review/get-reviews/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/reviews/review.controller.ts:92">reviews/review.controller.ts:92</td>
+    </tr>
+    <tr data-text="GET search-companies/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/search-companies/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/search-companies/search-companies.controller.ts:11">search-companies/search-companies.controller.ts:11</td>
+    </tr>
+    <tr data-text="GET organizer-ticket-sales/public/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/organizer-ticket-sales/public/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/organizer-ticket-sales.controller.ts:38">seller/organizer-ticket-sales.controller.ts:38</td>
+    </tr>
+    <tr data-text="GET organizer-ticket-sales/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/organizer-ticket-sales/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/organizer-ticket-sales.controller.ts:91">seller/organizer-ticket-sales.controller.ts:91</td>
+    </tr>
+    <tr data-text="GET organizer-ticket-sales/admin/all-organizers">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/organizer-ticket-sales/admin/all-organizers</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/organizer-ticket-sales.controller.ts:145">seller/organizer-ticket-sales.controller.ts:145</td>
+    </tr>
+    <tr data-text="GET organizer-ticket-sales">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/organizer-ticket-sales</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/organizer-ticket-sales.controller.ts:186">seller/organizer-ticket-sales.controller.ts:186</td>
+    </tr>
+    <tr data-text="GET organizer-ticket-sales/cross-border/summary">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/organizer-ticket-sales/cross-border/summary</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/organizer-ticket-sales.controller.ts:233">seller/organizer-ticket-sales.controller.ts:233</td>
+    </tr>
+    <tr data-text="GET organizer-ticket-sales/cross-border/fees">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/organizer-ticket-sales/cross-border/fees</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/organizer-ticket-sales.controller.ts:273">seller/organizer-ticket-sales.controller.ts:273</td>
+    </tr>
+    <tr data-text="GET organizer-ticket-sales/health">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/organizer-ticket-sales/health</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/organizer-ticket-sales.controller.ts:318">seller/organizer-ticket-sales.controller.ts:318</td>
+    </tr>
+    <tr data-text="POST seller/connect/embedded/account-session">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/seller/connect/embedded/account-session</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/seller.controller.ts:41">seller/seller.controller.ts:41</td>
+    </tr>
+    <tr data-text="GET seller/account">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/seller/account</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/seller.controller.ts:281">seller/seller.controller.ts:281</td>
+    </tr>
+    <tr data-text="POST seller/webhook">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/seller/webhook</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/seller.controller.ts:402">seller/seller.controller.ts:402</td>
+    </tr>
+    <tr data-text="GET seller/balance">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/seller/balance</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/seller.controller.ts:530">seller/seller.controller.ts:530</td>
+    </tr>
+    <tr data-text="GET seller/account-login-link">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/seller/account-login-link</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/seller.controller.ts:557">seller/seller.controller.ts:557</td>
+    </tr>
+    <tr data-text="GET seller/earnings/instant-eligibility">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/seller/earnings/instant-eligibility</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/seller.controller.ts:701">seller/seller.controller.ts:701</td>
+    </tr>
+    <tr data-text="POST seller/earnings/instant-payout">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/seller/earnings/instant-payout</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/seller/seller.controller.ts:726">seller/seller.controller.ts:726</td>
+    </tr>
+    <tr data-text="POST service-booking">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/service-booking</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/service-booking/service-booking.controller.ts:45">service-booking/service-booking.controller.ts:45</td>
+    </tr>
+    <tr data-text="GET service-booking/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/service-booking/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/service-booking/service-booking.controller.ts:85">service-booking/service-booking.controller.ts:85</td>
+    </tr>
+    <tr data-text="GET service-booking">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/service-booking</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/service-booking/service-booking.controller.ts:132">service-booking/service-booking.controller.ts:132</td>
+    </tr>
+    <tr data-text="PATCH service-booking/{}/status">
+      <td><span class="verb PATCH">PATCH</span></td>
+      <td class="path" colspan="3">/service-booking/{}/status</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/service-booking/service-booking.controller.ts:174">service-booking/service-booking.controller.ts:174</td>
+    </tr>
+    <tr data-text="POST sms/credits/adjust">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/sms/credits/adjust</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/sms/sms.controller.ts:66">sms/sms.controller.ts:66</td>
+    </tr>
+    <tr data-text="GET stats/platform-revenue/transactions">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/stats/platform-revenue/transactions</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/stats/stats.controller.ts:113">stats/stats.controller.ts:113</td>
+    </tr>
+    <tr data-text="GET stats/platform-revenue">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/stats/platform-revenue</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/stats/stats.controller.ts:154">stats/stats.controller.ts:154</td>
+    </tr>
+    <tr data-text="POST subscription/sync-stripe">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/subscription/sync-stripe</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/subscription/subscription.controller.ts:26">subscription/subscription.controller.ts:26</td>
+    </tr>
+    <tr data-text="POST subscription/{}/subscribe/{}">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/subscription/{}/subscribe/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/subscription/subscription.controller.ts:92">subscription/subscription.controller.ts:92</td>
+    </tr>
+    <tr data-text="POST test/seed">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/test/seed</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/test-seed/test-seed.controller.ts:22">test-seed/test-seed.controller.ts:22</td>
+    </tr>
+    <tr data-text="GET unsplash/search">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/unsplash/search</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/unsplash/unsplash.controller.ts:35">unsplash/unsplash.controller.ts:35</td>
+    </tr>
+    <tr data-text="GET unsplash/random">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/unsplash/random</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/unsplash/unsplash.controller.ts:58">unsplash/unsplash.controller.ts:58</td>
+    </tr>
+    <tr data-text="GET unsplash/collections">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/unsplash/collections</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/unsplash/unsplash.controller.ts:81">unsplash/unsplash.controller.ts:81</td>
+    </tr>
+    <tr data-text="GET unsplash/collections/{}/photos">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/unsplash/collections/{}/photos</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/unsplash/unsplash.controller.ts:104">unsplash/unsplash.controller.ts:104</td>
+    </tr>
+    <tr data-text="GET unsplash/download">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/unsplash/download</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/unsplash/unsplash.controller.ts:134">unsplash/unsplash.controller.ts:134</td>
+    </tr>
+    <tr data-text="GET user/me">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/user/me</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/user/user.controller.ts:81">user/user.controller.ts:81</td>
+    </tr>
+    <tr data-text="DELETE user/delete/{}">
+      <td><span class="verb DELETE">DELETE</span></td>
+      <td class="path" colspan="3">/user/delete/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/user/user.controller.ts:208">user/user.controller.ts:208</td>
+    </tr>
+    <tr data-text="GET user/public-profile/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/user/public-profile/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/user/user.controller.ts:291">user/user.controller.ts:291</td>
+    </tr>
+    <tr data-text="POST user/add-user-as-organization-member">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/user/add-user-as-organization-member</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/user/user.controller.ts:642">user/user.controller.ts:642</td>
+    </tr>
+    <tr data-text="GET user/bashcoins">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/user/bashcoins</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/user/user.controller.ts:678">user/user.controller.ts:678</td>
+    </tr>
+    <tr data-text="GET user/{}">
+      <td><span class="verb GET">GET</span></td>
+      <td class="path" colspan="3">/user/{}</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/user/user.controller.ts:726">user/user.controller.ts:726</td>
+    </tr>
+    <tr data-text="POST user/waiting-list">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/user/waiting-list</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/user/user.controller.ts:760">user/user.controller.ts:760</td>
+    </tr>
+    <tr data-text="PUT user/update-timezone">
+      <td><span class="verb PUT">PUT</span></td>
+      <td class="path" colspan="3">/user/update-timezone</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/user/user.controller.ts:801">user/user.controller.ts:801</td>
+    </tr>
+    <tr data-text="POST vendor-bookings">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/vendor-bookings</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/vendor-booking/vendor-booking.controller.ts:223">vendor-booking/vendor-booking.controller.ts:223</td>
+    </tr>
+    <tr data-text="POST vendor-bookings/{}/confirm">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/vendor-bookings/{}/confirm</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/vendor-booking/vendor-booking.controller.ts:321">vendor-booking/vendor-booking.controller.ts:321</td>
+    </tr>
+    <tr data-text="POST xe-currency/convert">
+      <td><span class="verb POST">POST</span></td>
+      <td class="path" colspan="3">/xe-currency/convert</td>
+      <td class="loc" title="/Users/segzy/projects/bashbop-api/src/xe-currency/xe-currency.controller.ts:25">xe-currency/xe-currency.controller.ts:25</td>
+    </tr></tbody></table>
+  </section>
+</main>
+
+<footer>Generated by <strong>seam</strong> · static FE↔BE contract checker</footer>
+<script>
+function filterRows(input){var q=input.value.toLowerCase();var rows=input.parentNode.querySelectorAll('tbody tr');rows.forEach(function(r){r.style.display=(r.getAttribute('data-text')||'').toLowerCase().indexOf(q)>-1?'':'none'});}
+document.querySelectorAll('.node').forEach(function(n){n.addEventListener('mouseenter',function(){var res=n.getAttribute('data-res');document.querySelectorAll('.link').forEach(function(l){l.style.opacity=l.getAttribute('data-from')===res?'1':'.12'})});n.addEventListener('mouseleave',function(){document.querySelectorAll('.link').forEach(function(l){l.style.opacity=''})});});
+</script>
+</body></html>

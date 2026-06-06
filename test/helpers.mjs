@@ -20,7 +20,7 @@ export function assertRoutes(assert, arr, expected) {
 
 /** Write `files` ({ relpath: contents }) into a fresh temp dir, run fn(dir), clean up. */
 export function withTempRepo(files, fn) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'seam-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dowel-'));
   try {
     for (const [rel, content] of Object.entries(files)) {
       const fp = path.join(dir, rel);

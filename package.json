@@ -1,13 +1,13 @@
 {
-  "name": "seam-contract",
+  "name": "@nugehs/dowel",
   "version": "0.1.0",
-  "description": "Static FE↔BE contract-drift checker. Pact without writing a single contract test.",
+  "description": "dowel — static frontend↔backend contract-drift checker. Pact without writing a single contract test.",
   "type": "module",
   "bin": {
-    "seam": "bin/seam.mjs"
+    "dowel": "bin/dowel.mjs"
   },
   "scripts": {
-    "check": "node bin/seam.mjs check",
+    "check": "node bin/dowel.mjs check",
     "test": "node --test test/*.test.mjs"
   },
   "engines": {
@@ -16,15 +16,21 @@
   "files": [
     "bin",
     "src",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "keywords": [
     "contract-testing",
+    "contract-drift",
     "openapi",
-    "nestjs",
-    "rtk-query",
     "api-drift",
-    "monorepo"
+    "nestjs",
+    "express",
+    "fastapi",
+    "spring",
+    "rtk-query",
+    "monorepo",
+    "ci"
   ],
   "license": "MIT"
 }

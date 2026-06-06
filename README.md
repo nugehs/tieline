@@ -1,20 +1,20 @@
-# seam
+# dowel
 
 **Static FE↔BE contract-drift checker. Pact without writing a single contract test.**
 
-`seam` reads the code you already wrote on both sides of an API boundary — the
+`dowel` reads the code you already wrote on both sides of an API boundary — the
 HTTP calls your frontend makes and the routes your backend exposes — and tells
 you where they disagree. No contract tests to author, no broker to run, no
 backend to boot. It finishes in under a second and is meant to run in CI as a
 gate.
 
-> Delete the LLM and a developer still installs it. `seam` is a deterministic
+> Delete the LLM and a developer still installs it. `dowel` is a deterministic
 > tool first; an agent reading its output is a bonus.
 
 ## What it finds
 
 ```
-  seam · contract check
+  dowel · contract check
 
   ❌  38 drift  (FE calls a route the backend does not expose)
      GET    /users/{}
@@ -40,37 +40,37 @@ Four buckets:
 
 `drift` is the money bucket. `unverifiable` is the honesty bucket: a url like
 `` `blog/tags/popular${q ? `?limit=${q}` : ''}` `` can't be resolved statically,
-so `seam` says so rather than crying wolf.
+so `dowel` says so rather than crying wolf.
 
 ## Usage
 
 ```bash
-seam check      # FE↔BE drift: report + exit non-zero on drift (CI gate)
-seam list       # the full resolved contract map (every endpoint + status)
-seam orphans    # backend routes no frontend call reaches
-seam doctor     # code↔spec drift: routes in code but missing from the OpenAPI doc
-seam check --json        # machine-readable
-seam check --html report.html   # self-contained visual report (see below)
-seam check --no-fail     # report only, always exit 0
-seam check --config path/to/seam.config.json
+dowel check      # FE↔BE drift: report + exit non-zero on drift (CI gate)
+dowel list       # the full resolved contract map (every endpoint + status)
+dowel orphans    # backend routes no frontend call reaches
+dowel doctor     # code↔spec drift: routes in code but missing from the OpenAPI doc
+dowel check --json        # machine-readable
+dowel check --html report.html   # self-contained visual report (see below)
+dowel check --no-fail     # report only, always exit 0
+dowel check --config path/to/dowel.config.json
 ```
 
 ### `--html` — a shareable visual report
 
-`seam check --html report.html` writes one self-contained file (inline CSS/JS,
+`dowel check --html report.html` writes one self-contained file (inline CSS/JS,
 no external assets) you can open in any browser or attach to a PR. It features a
 **contract-flow diagram** — frontend resources on the left, backend on the
 right, with curved links coloured green (matched) / red (drift), plus a health
 ring, summary cards, and live-filterable drift / unverifiable / unused-route
 tables. Hovering a resource highlights its links.
 
-### `seam doctor` — does your code match your published docs?
+### `dowel doctor` — does your code match your published docs?
 
 Diffs routes parsed from source (a native adapter like `nestjs`) against the
 routes declared in your OpenAPI spec (`server.spec`, a file or live URL):
 
 ```
-  seam · doctor   code (nestjs)  ↔  spec (http://localhost:9999/doc-json)
+  dowel · doctor   code (nestjs)  ↔  spec (http://localhost:9999/doc-json)
 
   ❌  36 undocumented  (in code, missing from the published spec)
      GET    /premium-analytics/subscription/features   src/premium-analytics/...:54
@@ -90,7 +90,7 @@ entire modules (`/ai`, `/theme`, `/premium-analytics`, `/recommendations`,
 
 ## Configuration
 
-`seam.config.json` (searched for upward from cwd):
+`dowel.config.json` (searched for upward from cwd):
 
 ```jsonc
 {
@@ -167,7 +167,7 @@ from that spec.
 ## Roadmap
 
 - **v0.1 (this)** — path + method existence drift. Static, zero-dependency, CI-gateable.
-- **v0.2** — SARIF output (inline GitHub PR annotations), `seam.config` ignores.
+- **v0.2** — SARIF output (inline GitHub PR annotations), `dowel.config` ignores.
 - **v0.3 `--deep`** — emit `openapi.json` from the NestJS side and diff
   request/response **DTO shapes**, not just paths. This is where the expensive
   bugs (a renamed field, a changed enum) get caught.
@@ -193,7 +193,7 @@ npm test    # node --test, zero dependencies
   `stripPrefix`, missing-file error.
 - **doctor** — undocumented / phantom / matched, method-mismatch hints, ignore.
 - **integration** — three cross-stack matcher proofs (RTK↔Express,
-  Angular↔Spring, axios↔FastAPI) and the real `seam` CLI (exit codes, `--json`,
+  Angular↔Spring, axios↔FastAPI) and the real `dowel` CLI (exit codes, `--json`,
   `--no-fail`, `doctor`, unknown-adapter error).
 
 ## Limitations (v0.1)

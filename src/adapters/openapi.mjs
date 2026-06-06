@@ -101,6 +101,6 @@ async function parseSpec(text, source) {
     }
   }
   throw new Error(
-    `spec at ${source} appears to be YAML. Install 'yaml' or 'js-yaml', or point seam at a JSON spec.`,
+    `spec at ${source} appears to be YAML. Install 'yaml' or 'js-yaml', or point dowel at a JSON spec.`,
   );
 }
