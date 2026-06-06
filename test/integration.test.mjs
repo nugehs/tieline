@@ -15,8 +15,8 @@ import { extractAngularHttp } from '../src/adapters/angular-http.mjs';
 import { extractAxiosFetch } from '../src/adapters/axios-fetch.mjs';
 import { ROOT, ex } from './helpers.mjs';
 
-const BIN = path.join(ROOT, 'bin', 'dowel.mjs');
-const dowel = (args, cwd = ROOT) => spawnSync(process.execPath, [BIN, ...args], { cwd, encoding: 'utf8' });
+const BIN = path.join(ROOT, 'bin', 'tieline.mjs');
+const tieline = (args, cwd = ROOT) => spawnSync(process.execPath, [BIN, ...args], { cwd, encoding: 'utf8' });
 
 // ---- the matcher is stack-agnostic (mix any client × any server) ---------
 
@@ -54,18 +54,18 @@ test('matcher: axios-fetch client ↔ fastapi server (Python, drift)', () => {
 // ---- CLI behaviour (real process) ---------------------------------------
 
 test('cli: `check` exits 1 when drift is present', () => {
-  const r = dowel(['check', '--config', 'dowel.express.config.json']);
+  const r = tieline(['check', '--config', 'tieline.express.config.json']);
   assert.equal(r.status, 1);
   assert.match(r.stdout, /drift/);
 });
 
 test('cli: `--no-fail` always exits 0', () => {
-  const r = dowel(['check', '--config', 'dowel.express.config.json', '--no-fail']);
+  const r = tieline(['check', '--config', 'tieline.express.config.json', '--no-fail']);
   assert.equal(r.status, 0);
 });
 
 test('cli: `--json` emits parseable totals', () => {
-  const r = dowel(['check', '--config', 'dowel.express.config.json', '--json', '--no-fail']);
+  const r = tieline(['check', '--config', 'tieline.express.config.json', '--json', '--no-fail']);
   assert.equal(r.status, 0);
   const data = JSON.parse(r.stdout);
   assert.equal(data.totals.drift, 2);
@@ -83,10 +83,10 @@ test('cli: `doctor` agrees when code and spec match (exit 0)', () => {
       spec: ex('openapi-fixture/spec.json'),
     },
   };
-  const cfgPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'dowel-cfg-')), 'dowel.config.json');
+  const cfgPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'tieline-cfg-')), 'tieline.config.json');
   fs.writeFileSync(cfgPath, JSON.stringify(cfg));
   try {
-    const r = dowel(['doctor', '--config', cfgPath]);
+    const r = tieline(['doctor', '--config', cfgPath]);
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.match(r.stdout, /0 undocumented/);
     assert.match(r.stdout, /0 phantom/);
@@ -96,9 +96,9 @@ test('cli: `doctor` agrees when code and spec match (exit 0)', () => {
 });
 
 test('cli: `--html` writes a self-contained report with the flow chart', () => {
-  const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'dowel-html-')), 'report.html');
+  const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'tieline-html-')), 'report.html');
   try {
-    const r = dowel(['check', '--config', 'dowel.express.config.json', '--no-fail', '--html', out]);
+    const r = tieline(['check', '--config', 'tieline.express.config.json', '--no-fail', '--html', out]);
     assert.equal(r.status, 0);
     const html = fs.readFileSync(out, 'utf8');
     assert.match(html, /<!doctype html>/i);
@@ -111,10 +111,10 @@ test('cli: `--html` writes a self-contained report with the flow chart', () => {
 });
 
 test('cli: unknown adapter fails with a clear message', () => {
-  const cfgPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'dowel-cfg-')), 'dowel.config.json');
+  const cfgPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'tieline-cfg-')), 'tieline.config.json');
   fs.writeFileSync(cfgPath, JSON.stringify({ client: { adapter: 'nope' }, server: { adapter: 'express', repo: ROOT } }));
   try {
-    const r = dowel(['check', '--config', cfgPath]);
+    const r = tieline(['check', '--config', cfgPath]);
     assert.equal(r.status, 2);
     assert.match(r.stderr, /Unknown client adapter/);
   } finally {

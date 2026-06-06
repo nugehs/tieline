@@ -8,7 +8,7 @@ const DEFAULTS = {
   failOn: ['drift'],
 };
 
-/** Load and resolve dowel.config.json. Repo paths are resolved relative to the config file. */
+/** Load and resolve tieline.config.json. Repo paths are resolved relative to the config file. */
 export function loadConfig(explicitPath) {
   const cfgPath = path.resolve(explicitPath || findConfig());
   const dir = path.dirname(cfgPath);
@@ -29,11 +29,11 @@ export function loadConfig(explicitPath) {
 function findConfig() {
   let dir = process.cwd();
   for (;;) {
-    const p = path.join(dir, 'dowel.config.json');
+    const p = path.join(dir, 'tieline.config.json');
     if (fs.existsSync(p)) return p;
     const parent = path.dirname(dir);
     if (parent === dir) break;
     dir = parent;
   }
-  throw new Error('No dowel.config.json found (searched up from cwd). Pass --config <path>.');
+  throw new Error('No tieline.config.json found (searched up from cwd). Pass --config <path>.');
 }

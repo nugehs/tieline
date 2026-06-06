@@ -26,7 +26,7 @@ export function reportHuman(result, { command = 'check' } = {}) {
   }
 
   console.log('');
-  console.log(c('bold', '  dowel · contract check'));
+  console.log(c('bold', '  tieline · contract check'));
   console.log('');
 
   if (drift.length) {
@@ -58,7 +58,7 @@ export function reportHuman(result, { command = 'check' } = {}) {
       '   ' +
       c('dim', `🟡 ${totals.dead} unused backend routes`),
   );
-  console.log(c('dim', '  (run `dowel orphans` to list unused backend routes)'));
+  console.log(c('dim', '  (run `tieline orphans` to list unused backend routes)'));
   console.log('');
 }
 
@@ -77,7 +77,7 @@ export function reportDoctor(result, { codeAdapter, specSource } = {}) {
   const { undocumented, phantom, totals } = result;
 
   console.log('');
-  console.log(c('bold', '  dowel · doctor') + c('dim', `   code (${codeAdapter})  ↔  spec (${rel(specSource)})`));
+  console.log(c('bold', '  tieline · doctor') + c('dim', `   code (${codeAdapter})  ↔  spec (${rel(specSource)})`));
   console.log('');
 
   if (undocumented.length) {

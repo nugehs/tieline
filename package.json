@@ -1,13 +1,13 @@
 {
-  "name": "@nugehs/dowel",
+  "name": "@nugehs/tieline",
   "version": "0.1.0",
-  "description": "dowel — static frontend↔backend contract-drift checker. Pact without writing a single contract test.",
+  "description": "tieline — static frontend↔backend contract-drift checker. Pact without writing a single contract test.",
   "type": "module",
   "bin": {
-    "dowel": "bin/dowel.mjs"
+    "tieline": "bin/tieline.mjs"
   },
   "scripts": {
-    "check": "node bin/dowel.mjs check",
+    "check": "node bin/tieline.mjs check",
     "test": "node --test test/*.test.mjs"
   },
   "engines": {

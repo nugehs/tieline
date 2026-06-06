@@ -73,7 +73,7 @@ export async function run(argv) {
   }
 }
 
-// `dowel doctor`: diff native-parsed code routes against the OpenAPI spec.
+// `tieline doctor`: diff native-parsed code routes against the OpenAPI spec.
 async function runDoctor(cfg, args) {
   const codeAdapter = SERVER_ADAPTERS[cfg.server.adapter];
   if (!codeAdapter) throw new Error(`Unknown server adapter: ${cfg.server.adapter}`);
@@ -113,7 +113,7 @@ function parseArgs(argv) {
     else if (a === '--json') args.json = true;
     else if (a === '--no-fail') args.noFail = true;
     else if (a === '--config') args.config = argv[++i];
-    else if (a === '--html') args.html = argv[++i] || 'dowel-report.html';
+    else if (a === '--html') args.html = argv[++i] || 'tieline-report.html';
     else if (a === '-h' || a === '--help') args.help = true;
   }
   return args;
@@ -121,10 +121,10 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(`
-dowel — static FE↔BE contract-drift checker
+tieline — static FE↔BE contract-drift checker
 
 USAGE
-  dowel [check|list|orphans] [options]
+  tieline [check|list|orphans] [options]
 
 COMMANDS
   check      Report drift + unverifiable calls, exit non-zero on drift (default)
@@ -134,7 +134,7 @@ COMMANDS
              undocumented (in code, not in spec) + phantom (in spec, not in code)
 
 OPTIONS
-  --config <path>   Path to dowel.config.json (default: search up from cwd)
+  --config <path>   Path to tieline.config.json (default: search up from cwd)
   --json            Machine-readable output
   --html <file>     Write a self-contained HTML report (with a contract-flow chart)
   --no-fail         Always exit 0 (report only)
