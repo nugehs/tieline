@@ -7,6 +7,14 @@ const esc = (s) =>
 const seg = (p) => (String(p || '').split('/')[0] || '(root)');
 const rel = (f) => String(f).replace(process.cwd() + '/', '');
 
+// Compact "folder/file.ts:line" with the full path kept on hover.
+const shortFile = (f) => {
+  const p = String(f).split('/');
+  return p.length > 2 ? p.slice(-2).join('/') : String(f);
+};
+const locCell = (file, line) =>
+  `<td class="loc" title="${esc(rel(file))}${line ? ':' + line : ''}">${esc(shortFile(file))}${line ? ':' + line : ''}</td>`;
+
 export function reportHtml(result, meta = {}) {
   const { matched = [], drift = [], unverifiable = [], dead = [], totals = {} } = result;
   const total = (totals.matched || 0) + (totals.drift || 0) + (totals.unverifiable || 0);
@@ -50,25 +58,23 @@ export function reportHtml(result, meta = {}) {
 
   ${table('Drift', 'bad', drift, (d) => `
     <tr data-text="${esc(d.method + ' ' + d._np + ' ' + d.name)}">
-      <td><span class="verb ${d.method}">${esc(d.method)}</span></td>
-      <td class="path">/${esc(d._np)}</td>
-      <td class="dim">${esc(d.name || '')}</td>
+      <td class="ep"><span class="verb ${d.method}">${esc(d.method)}</span><span class="path">/${esc(d._np)}</span>${d.name ? `<div class="sub">${esc(d.name)}</div>` : ''}</td>
       <td class="hintcell">${esc(d.hint || '')}</td>
-      <td class="loc">${esc(rel(d.file))}${d.line ? ':' + d.line : ''}</td>
+      ${locCell(d.file, d.line)}
     </tr>`, 'These frontend calls do not match any backend route.')}
 
   ${table('Unverifiable', 'warn', unverifiable, (u) => `
     <tr data-text="${esc((u.name || '') + ' ' + rel(u.file))}">
       <td class="dim" colspan="2">${esc(u.name || '(dynamic)')}</td>
       <td colspan="2" class="hintcell">url built at runtime — not statically resolvable</td>
-      <td class="loc">${esc(rel(u.file))}${u.line ? ':' + u.line : ''}</td>
+      ${locCell(u.file, u.line)}
     </tr>`, 'Calls whose URL is assembled at runtime. Reported, never guessed.')}
 
   ${table('Unused backend routes', 'mute', dead, (r) => `
     <tr data-text="${esc(r.method + ' ' + r._np)}">
       <td><span class="verb ${r.method}">${esc(r.method)}</span></td>
       <td class="path" colspan="3">/${esc(r._np)}</td>
-      <td class="loc">${esc(rel(r.file))}${r.line ? ':' + r.line : ''}</td>
+      ${locCell(r.file, r.line)}
     </tr>`, 'Backend routes no resolvable frontend call reaches (may be webhooks, admin, or other clients).')}
 </main>
 
@@ -210,11 +216,14 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px 60px}
 .link{fill:none;opacity:.55;transition:opacity .15s}.link.matched{stroke:var(--ok)}.link.drift{stroke:var(--bad);stroke-dasharray:6 4}.link.missing{stroke:var(--mute);stroke-dasharray:2 4}
 .flowsvg:hover .link{opacity:.18}.flowsvg .link:hover{opacity:1}
 .filter{width:100%;background:#0d1426;border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px 12px;margin-bottom:12px;font:13px ui-monospace,monospace}
-table{width:100%;border-collapse:collapse;font:13px ui-monospace,SFMono-Regular,Menlo,monospace}
-td{padding:7px 10px;border-top:1px solid var(--line);vertical-align:top}
-.verb{font-weight:700;font-size:11px;padding:2px 7px;border-radius:6px;background:#18203a}
+table{width:100%;border-collapse:collapse;font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace}
+tbody tr:hover{background:rgba(99,102,241,.07)}
+td{padding:5px 10px;border-top:1px solid var(--line);vertical-align:top}
+.verb{display:inline-block;min-width:50px;text-align:center;font-weight:700;font-size:10.5px;letter-spacing:.5px;padding:2px 6px;border-radius:6px;background:#18203a}
 .verb.GET{color:#38bdf8}.verb.POST{color:#34d399}.verb.PUT,.verb.PATCH{color:#fbbf24}.verb.DELETE{color:#fb7185}.verb.ALL{color:#a78bfa}
-.path{font-weight:600}.hintcell{color:var(--warn)}.loc{color:var(--dim);text-align:right;white-space:nowrap}
+.path{font-weight:600;overflow-wrap:anywhere}.hintcell{color:var(--warn)}
+.ep .path{margin-left:8px}.sub{color:var(--dim);font-size:11px;margin-top:3px}
+.loc{color:var(--dim);text-align:right;white-space:nowrap;cursor:default}.loc:hover{color:var(--ink)}
 td.dim{color:var(--dim)}
 footer{text-align:center;color:var(--dim);font-size:13px;padding:24px}
 @media(max-width:680px){.cards{grid-template-columns:repeat(2,1fr)}.hero{flex-direction:column;align-items:flex-start}}
