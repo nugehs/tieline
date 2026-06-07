@@ -12,6 +12,7 @@ import { extractAxiosFetch } from './adapters/axios-fetch.mjs';
 import { extractAngularHttp } from './adapters/angular-http.mjs';
 import { match } from './match.mjs';
 import { doctor } from './doctor.mjs';
+import { runInit } from './init.mjs';
 import { reportHuman, reportDoctor } from './reporters/human.mjs';
 import { reportJson, reportDoctorJson } from './reporters/json.mjs';
 import { reportHtml } from './reporters/html.mjs';
@@ -36,6 +37,8 @@ const SERVER_ADAPTERS = {
 export async function run(argv) {
   const args = parseArgs(argv);
   if (args.help) return printHelp();
+
+  if (args.command === 'init') return void runInit();
 
   const cfg = loadConfig(args.config);
 
@@ -109,7 +112,7 @@ function parseArgs(argv) {
   const args = { command: 'check', json: false, noFail: false, config: null, help: false, html: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === 'check' || a === 'list' || a === 'orphans' || a === 'doctor') args.command = a;
+    if (a === 'check' || a === 'list' || a === 'orphans' || a === 'doctor' || a === 'init') args.command = a;
     else if (a === '--json') args.json = true;
     else if (a === '--no-fail') args.noFail = true;
     else if (a === '--config') args.config = argv[++i];
@@ -124,9 +127,10 @@ function printHelp() {
 tieline — static FE↔BE contract-drift checker
 
 USAGE
-  tieline [check|list|orphans] [options]
+  tieline [init|check|list|orphans|doctor] [options]
 
 COMMANDS
+  init       Auto-detect nearby repos and write a tieline.config.json
   check      Report drift + unverifiable calls, exit non-zero on drift (default)
   list       Print the full resolved contract map (every endpoint + its status)
   orphans    List backend routes no resolvable frontend call reaches
