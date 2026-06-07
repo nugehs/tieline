@@ -1,38 +1,10 @@
 import { loadConfig } from './config.mjs';
-import { extractRtkQuery } from './adapters/rtk-query.mjs';
-import { extractNestjs } from './adapters/nestjs.mjs';
-import { extractOpenapi } from './adapters/openapi.mjs';
-import { extractExpress } from './adapters/express.mjs';
-import { extractFastify } from './adapters/fastify.mjs';
-import { extractNext } from './adapters/next.mjs';
-import { extractFastapi } from './adapters/fastapi.mjs';
-import { extractFlask } from './adapters/flask.mjs';
-import { extractSpring } from './adapters/spring.mjs';
-import { extractAxiosFetch } from './adapters/axios-fetch.mjs';
-import { extractAngularHttp } from './adapters/angular-http.mjs';
-import { match } from './match.mjs';
-import { doctor } from './doctor.mjs';
+import { runCheck, runDoctorCheck } from './core.mjs';
 import { runInit } from './init.mjs';
 import { reportHuman, reportDoctor } from './reporters/human.mjs';
 import { reportJson, reportDoctorJson } from './reporters/json.mjs';
 import { reportHtml } from './reporters/html.mjs';
 import { writeFileSync } from 'node:fs';
-
-const CLIENT_ADAPTERS = {
-  'rtk-query': extractRtkQuery,
-  'axios-fetch': extractAxiosFetch,
-  'angular-http': extractAngularHttp,
-};
-const SERVER_ADAPTERS = {
-  nestjs: extractNestjs,
-  openapi: extractOpenapi,
-  express: extractExpress,
-  fastify: extractFastify,
-  next: extractNext,
-  fastapi: extractFastapi,
-  flask: extractFlask,
-  spring: extractSpring,
-};
 
 export async function run(argv) {
   const args = parseArgs(argv);
@@ -44,18 +16,7 @@ export async function run(argv) {
 
   if (args.command === 'doctor') return runDoctor(cfg, args);
 
-  const clientAdapter = CLIENT_ADAPTERS[cfg.client.adapter];
-  const serverAdapter = SERVER_ADAPTERS[cfg.server.adapter];
-  if (!clientAdapter) throw new Error(`Unknown client adapter: ${cfg.client.adapter}`);
-  if (!serverAdapter) throw new Error(`Unknown server adapter: ${cfg.server.adapter}`);
-
-  const endpoints = await clientAdapter(cfg.client);
-  const routes = await serverAdapter(cfg.server);
-
-  const result = match(endpoints, routes, {
-    basePath: cfg.client.basePath,
-    ignore: cfg.ignore,
-  });
+  const result = await runCheck(cfg);
 
   if (args.html) {
     writeFileSync(args.html, reportHtml(result, {
@@ -78,26 +39,7 @@ export async function run(argv) {
 
 // `tieline doctor`: diff native-parsed code routes against the OpenAPI spec.
 async function runDoctor(cfg, args) {
-  const codeAdapter = SERVER_ADAPTERS[cfg.server.adapter];
-  if (!codeAdapter) throw new Error(`Unknown server adapter: ${cfg.server.adapter}`);
-  if (cfg.server.adapter === 'openapi') {
-    throw new Error("`doctor` needs a native server adapter (e.g. nestjs) as the code source, plus server.spec for the doc.");
-  }
-  if (!cfg.server.spec) {
-    throw new Error('`doctor` needs `server.spec` (file path or url to the OpenAPI doc) in your config.');
-  }
-
-  const codeRoutes = await codeAdapter(cfg.server);
-  const specRoutes = await extractOpenapi({
-    spec: cfg.server.spec,
-    stripPrefix: cfg.server.globalPrefix,
-    repoRoot: cfg.server.repoRoot,
-  });
-
-  const result = doctor(codeRoutes, specRoutes, {
-    basePath: cfg.server.globalPrefix,
-    ignore: cfg.ignore,
-  });
+  const result = await runDoctorCheck(cfg);
 
   if (args.json) reportDoctorJson(result);
   else reportDoctor(result, { codeAdapter: cfg.server.adapter, specSource: cfg.server.spec });

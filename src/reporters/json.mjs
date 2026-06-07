@@ -8,34 +8,34 @@ const slim = (e) => ({
   line: e.line,
 });
 
+const slimRoute = (r) => ({ method: r.method, path: '/' + r._np, file: r.file, line: r.line });
+const slimDoctor = (r) => ({ method: r.method, path: '/' + r._np, hint: r.hint, file: r.file, line: r.line || undefined });
+
+/** Shape a match() result into a plain, serializable object. */
+export function toJson(result) {
+  const { matched, drift, unverifiable, dead, totals } = result;
+  return {
+    totals,
+    drift: drift.map(slim),
+    unverifiable: unverifiable.map(slim),
+    matched: matched.map(slim),
+    dead: dead.map(slimRoute),
+  };
+}
+
+/** Shape a doctor() result into a plain, serializable object. */
+export function toDoctorJson(result) {
+  return {
+    totals: result.totals,
+    undocumented: result.undocumented.map(slimDoctor),
+    phantom: result.phantom.map(slimDoctor),
+  };
+}
+
 export function reportDoctorJson(result) {
-  const slimR = (r) => ({ method: r.method, path: '/' + r._np, hint: r.hint, file: r.file, line: r.line || undefined });
-  console.log(
-    JSON.stringify(
-      {
-        totals: result.totals,
-        undocumented: result.undocumented.map(slimR),
-        phantom: result.phantom.map(slimR),
-      },
-      null,
-      2,
-    ),
-  );
+  console.log(JSON.stringify(toDoctorJson(result), null, 2));
 }
 
 export function reportJson(result) {
-  const { matched, drift, unverifiable, dead, totals } = result;
-  console.log(
-    JSON.stringify(
-      {
-        totals,
-        drift: drift.map(slim),
-        unverifiable: unverifiable.map(slim),
-        matched: matched.map(slim),
-        dead: dead.map((r) => ({ method: r.method, path: '/' + r._np, file: r.file, line: r.line })),
-      },
-      null,
-      2,
-    ),
-  );
+  console.log(JSON.stringify(toJson(result), null, 2));
 }
