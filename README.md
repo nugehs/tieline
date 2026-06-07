@@ -1,6 +1,6 @@
 # tieline
 
-[![npm](https://img.shields.io/npm/v/@nugehs/tieline)](https://www.npmjs.com/package/@nugehs/tieline) [![CI](https://github.com/nugehs/tieline/actions/workflows/test.yml/badge.svg)](https://github.com/nugehs/tieline/actions/workflows/test.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](#) [![tests](https://img.shields.io/badge/tests-53%20passing-brightgreen)](#tests) [![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](#)
+[![npm](https://img.shields.io/npm/v/@nugehs/tieline)](https://www.npmjs.com/package/@nugehs/tieline) [![CI](https://github.com/nugehs/tieline/actions/workflows/test.yml/badge.svg)](https://github.com/nugehs/tieline/actions/workflows/test.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](#) [![tests](https://img.shields.io/badge/tests-66%20passing-brightgreen)](#tests) [![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](#)
 
 **Static frontend↔backend contract-drift checker. Pact without writing a single contract test.**
 
@@ -50,7 +50,32 @@ npm install -g @nugehs/tieline
 # or, from a clone:  git clone … && cd tieline && npm link
 ```
 
-Add a `tieline.config.json` at the root of (or above) your repos:
+Generate a `tieline.config.json` — `init` sniffs the surrounding directories
+(cwd, its children, and its siblings) for known stacks and writes a ready-to-run
+config:
+
+```bash
+tieline init
+```
+
+```
+  tieline · init
+
+  scanning ~/code for repos…
+  ✔ client: rtk-query     → web   (roots: src/redux/apis)
+  ✔ server: nestjs        → api   (roots: src)
+
+  📝 wrote tieline.config.json
+```
+
+It detects adapters from `package.json` deps (`@reduxjs/toolkit`, `axios`,
+`@angular/core`, `@nestjs/core`, `express`, `fastify`, `next`),
+`requirements.txt` / `pyproject.toml` (`fastapi`, `flask`), `pom.xml` /
+`build.gradle` (`spring`), and any OpenAPI doc as a fallback. Anything it can't
+detect is written as a placeholder for you to edit. The file is always
+overwritten, so re-run it whenever your layout changes.
+
+Or write it by hand — at the root of (or above) your repos:
 
 ```jsonc
 {
@@ -88,6 +113,7 @@ the build fails the moment the two sides disagree.
 ## Commands
 
 ```bash
+tieline init       # auto-detect nearby repos and write tieline.config.json
 tieline check      # FE↔BE drift; exits non-zero on drift (the CI gate)
 tieline list       # the full resolved contract map (every endpoint + status)
 tieline orphans    # backend routes no frontend call reaches
@@ -219,7 +245,7 @@ diffing (`--deep`) and SARIF/PR annotations are on the roadmap.
 npm test    # node --test — zero dependencies, nothing to install
 ```
 
-53 tests on Node's built-in runner:
+66 tests on Node's built-in runner:
 
 - **normalize** — every param syntax (`${id}`/`:id`/`<int:id>`/`[id]`/`{id}`),
   query stripping, basePath, path joining
@@ -231,6 +257,8 @@ npm test    # node --test — zero dependencies, nothing to install
   → unverifiable, non-HttpClient `.get()` ignored)
 - **openapi** — `servers[].url` prefix, Swagger 2 `basePath`, `stripPrefix`
 - **doctor** — undocumented / phantom / matched + hints
+- **init** — stack auto-detection (node deps, Python, Spring, OpenAPI fallback),
+  dir-name bias, sibling/child scanning, placeholder fallback, config round-trip
 - **integration** — three cross-stack proofs (RTK↔Express, Angular↔Spring,
   axios↔FastAPI) and the real CLI (exit codes, `--json`, `--html`, `doctor`)
 
