@@ -24,7 +24,7 @@ const SERVER_NAMES = /(api|server|backend|back-end|service|svc|gateway)/i;
  * docs), picks the best client + server, and writes a ready-to-run config.
  * Always overwrites an existing config.
  */
-export function runInit({ cwd = process.cwd(), out = 'tieline.config.json' } = {}) {
+export function runInit({ cwd = process.cwd(), out = 'tieline.config.json', quiet = false } = {}) {
   const target = path.resolve(cwd, out);
   const existed = fs.existsSync(target);
 
@@ -33,8 +33,9 @@ export function runInit({ cwd = process.cwd(), out = 'tieline.config.json' } = {
 
   fs.writeFileSync(target, JSON.stringify(config, null, 2) + '\n');
 
-  print(cwd, client, server, target, existed);
-  return { config, client, server, path: target };
+  // `quiet` keeps stdout clean for the MCP server's JSON-RPC stream.
+  if (!quiet) print(cwd, client, server, target, existed);
+  return { config, client, server, path: target, existed };
 }
 
 /** Find the best client + server candidate among nearby directories. */

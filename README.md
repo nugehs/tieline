@@ -1,6 +1,6 @@
 # tieline
 
-[![npm](https://img.shields.io/npm/v/@nugehs/tieline)](https://www.npmjs.com/package/@nugehs/tieline) [![CI](https://github.com/nugehs/tieline/actions/workflows/test.yml/badge.svg)](https://github.com/nugehs/tieline/actions/workflows/test.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](#) [![tests](https://img.shields.io/badge/tests-66%20passing-brightgreen)](#tests) [![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](#)
+[![npm](https://img.shields.io/npm/v/@nugehs/tieline)](https://www.npmjs.com/package/@nugehs/tieline) [![CI](https://github.com/nugehs/tieline/actions/workflows/test.yml/badge.svg)](https://github.com/nugehs/tieline/actions/workflows/test.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](#) [![tests](https://img.shields.io/badge/tests-71%20passing-brightgreen)](#tests) [![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](#)
 
 **Static frontend↔backend contract-drift checker. Pact without writing a single contract test.**
 
@@ -224,6 +224,41 @@ Run it alongside `check` and your spec can never silently drift from your code.
 
 ---
 
+## Use as an MCP server
+
+tieline ships an [MCP](https://modelcontextprotocol.io) server so an agent can ask
+"do these two repos still agree?" and get the same structured result the CLI
+produces — **no LLM does the analysis, the deterministic engine does**. It's still
+zero-dependency: the server is hand-rolled stdio JSON-RPC, no SDK.
+
+Register it with any MCP client (Claude Code, Claude Desktop, …):
+
+```jsonc
+{
+  "mcpServers": {
+    "tieline": { "command": "npx", "args": ["-y", "-p", "@nugehs/tieline", "tieline-mcp"] }
+  }
+}
+```
+
+Or, from a global install (`npm i -g @nugehs/tieline`), just `"command": "tieline-mcp"`.
+
+It exposes five tools, each returning JSON:
+
+| Tool | Args | Returns |
+| --- | --- | --- |
+| `tieline_check` | `config?` | totals + `drift` + `unverifiable` (the drift gate) |
+| `tieline_list` | `config?` | the full resolved contract map |
+| `tieline_orphans` | `config?` | backend routes no frontend call reaches |
+| `tieline_doctor` | `config?` | `undocumented` + `phantom` (code ↔ spec) |
+| `tieline_init` | `cwd?` | auto-detect nearby repos, write a config |
+
+`config` defaults to searching upward from the server's working directory, exactly
+like the CLI — so an agent dropped into a repo with a `tieline.config.json` can
+just call `tieline_check`.
+
+---
+
 ## Architecture
 
 Each side implements a single extractor; everything downstream is shared.
@@ -245,7 +280,7 @@ diffing (`--deep`) and SARIF/PR annotations are on the roadmap.
 npm test    # node --test — zero dependencies, nothing to install
 ```
 
-66 tests on Node's built-in runner:
+71 tests on Node's built-in runner:
 
 - **normalize** — every param syntax (`${id}`/`:id`/`<int:id>`/`[id]`/`{id}`),
   query stripping, basePath, path joining
@@ -261,6 +296,8 @@ npm test    # node --test — zero dependencies, nothing to install
   dir-name bias, sibling/child scanning, placeholder fallback, config round-trip
 - **integration** — three cross-stack proofs (RTK↔Express, Angular↔Spring,
   axios↔FastAPI) and the real CLI (exit codes, `--json`, `--html`, `doctor`)
+- **mcp** — the stdio JSON-RPC server: handshake, `tools/list`, a real
+  `tieline_check` over a fixture, in-band tool errors, method-not-found
 
 ---
 

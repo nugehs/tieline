@@ -4,11 +4,14 @@
   "description": "tieline — static frontend↔backend contract-drift checker. Pact without writing a single contract test.",
   "type": "module",
   "bin": {
-    "tieline": "bin/tieline.mjs"
+    "tieline": "bin/tieline.mjs",
+    "tieline-mcp": "bin/tieline-mcp.mjs"
   },
   "scripts": {
     "check": "node bin/tieline.mjs check",
-    "test": "node --test test/*.test.mjs"
+    "mcp": "node bin/tieline-mcp.mjs",
+    "test": "node --test test/*.test.mjs",
+    "prepublishOnly": "npm test"
   },
   "engines": {
     "node": ">=18"
@@ -30,7 +33,22 @@
     "spring",
     "rtk-query",
     "monorepo",
-    "ci"
+    "ci",
+    "mcp",
+    "model-context-protocol",
+    "ai-agents"
   ],
-  "license": "MIT"
+  "author": "Segun Olumbe",
+  "license": "MIT",
+  "homepage": "https://github.com/nugehs/tieline#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nugehs/tieline.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nugehs/tieline/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }
