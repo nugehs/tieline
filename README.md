@@ -1,8 +1,8 @@
 # tieline
 
-[![npm](https://img.shields.io/npm/v/@nugehs/tieline)](https://www.npmjs.com/package/@nugehs/tieline) [![CI](https://github.com/nugehs/tieline/actions/workflows/test.yml/badge.svg)](https://github.com/nugehs/tieline/actions/workflows/test.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](#) [![tests](https://img.shields.io/badge/tests-71%20passing-brightgreen)](#tests) [![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](#)
-
 **Static frontend↔backend contract-drift checker. Pact without writing a single contract test.**
+
+[![npm](https://img.shields.io/npm/v/@nugehs/tieline?style=flat-square&color=dc0000)](https://www.npmjs.com/package/@nugehs/tieline) [![CI](https://img.shields.io/github/actions/workflow/status/nugehs/tieline/test.yml?style=flat-square&label=CI)](https://github.com/nugehs/tieline/actions/workflows/test.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-dc0000?style=flat-square)](LICENSE) [![node](https://img.shields.io/badge/node-%3E%3D18-dc0000?style=flat-square)](#) [![tests](https://img.shields.io/badge/tests-71%20passing-dc0000?style=flat-square)](#tests) [![dependencies](https://img.shields.io/badge/dependencies-0-dc0000?style=flat-square)](#)
 
 `tieline` reads the code you already wrote on both sides of an API boundary — the
 HTTP calls your frontend makes and the routes your backend exposes — and tells you
@@ -38,6 +38,24 @@ anything against an OpenAPI spec.
 | ❌ **drift** | FE call resolves but the BE has no such route/method — **the bug bucket** |
 | ⚠️ **unverifiable** | FE url is built at runtime — reported, never guessed |
 | 🟡 **dead** | BE route no resolvable FE call reaches (informational) |
+
+---
+
+## tieline vs alternatives
+
+These tools solve neighbouring problems — pick by what you have and what you want guaranteed.
+
+| Tool | How it works | What it catches | What it needs | Reach for it when |
+| --- | --- | --- | --- | --- |
+| **tieline** | Static analysis of FE call sites + BE route declarations, joined on `(METHOD, path)` | A frontend calling a route the backend doesn't expose (path/method drift), undocumented/phantom spec routes | Source code of both sides; nothing running, nothing authored | You want a sub-second CI gate with zero contract tests to write or maintain |
+| **[Pact](https://pact.io)** | Consumer-driven contract tests executed at runtime, shared via a broker | Request/response **payload** mismatches between specific consumer–provider pairs | Contract tests written on both sides, a Pact broker, provider verification builds | Independent teams need payload-level guarantees and a can-I-deploy workflow |
+| **[openapi-diff](https://github.com/OpenAPITools/openapi-diff)** | Diffs two OpenAPI documents | Breaking changes between two **spec versions** | Accurate specs for both versions; doesn't read source code | Your API surface is spec-first and you want to gate spec changes |
+| **[Optic](https://www.useoptic.com)** | Tracks your OpenAPI spec over time and diffs every change in CI | Breaking changes and style/standards violations in the **spec's history** | An OpenAPI spec kept in the repo | You govern an evolving spec and want each PR's API changes reviewed |
+| **[Schemathesis](https://schemathesis.io)** | Property-based fuzzing of a **running** API against its OpenAPI/GraphQL schema | Server crashes, schema violations, undocumented responses at runtime | A bootable backend + a schema | You want runtime conformance and robustness testing of the implementation |
+
+They compose: tieline catches FE↔BE drift statically in every PR, `tieline doctor`
+keeps code↔spec honest, and a runtime tool like Pact or Schemathesis can guard the
+payload/behaviour layer underneath.
 
 ---
 
@@ -317,3 +335,16 @@ Known limits today: regex-based extraction (robust on conventional code), one
 ## License
 
 MIT © Segun Olumbe
+
+---
+
+## Part of the toolchain
+
+**tieline** is one of four tools that form a deterministic trust layer for AI-assisted development. Each answers a question people keep handing to an LLM — with static analysis instead.
+
+- [repoctx](https://www.npmjs.com/package/@nugehs/repoctx) — context: what does this change actually touch?
+- **tieline** (this tool) — contracts: did the front end and back end quietly stop agreeing?
+- [bouncer](https://www.npmjs.com/package/@nugehs/bouncer) — compliance: could you defend this to Ofcom?
+- [aiglare](https://www.npmjs.com/package/@nugehs/aiglare) — governance: where can the model do something you can't undo?
+
+More at [segunolumbe.com](https://segunolumbe.com). *static analysis, never the model.*

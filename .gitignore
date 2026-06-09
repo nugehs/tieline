@@ -9,3 +9,6 @@ examples/bashbop-openapi.json
 # Generated reports
 tieline-report.html
 tieline-report.png
+
+# repoctx generated context (contains machine-local absolute paths)
+.dev-context/
