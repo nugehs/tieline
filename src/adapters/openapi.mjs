@@ -10,7 +10,7 @@ import path from 'node:path';
  * Config (server block):
  *   {
  *     "adapter": "openapi",
- *     "repo": "../bashbop-api",
+ *     "repo": "../my-api",
  *     "spec": "openapi.json" | "http://localhost:9999/doc-json",
  *     "stripPrefix": "api/v1"   // optional; removed from every path
  *   }

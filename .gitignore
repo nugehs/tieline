@@ -3,8 +3,9 @@ node_modules/
 .DS_Store
 dist/
 
-# Real customer specs used only as local test inputs — never commit into the tool.
-examples/bashbop-openapi.json
+# Real specs used only as local test inputs — never commit into the tool.
+# (the committed fixture lives at examples/openapi-fixture/spec.json)
+examples/*-openapi.json
 
 # Generated reports
 tieline-report.html
@@ -12,3 +13,4 @@ tieline-report.png
 
 # repoctx generated context (contains machine-local absolute paths)
 .dev-context/
+.claude/

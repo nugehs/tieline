@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.1] - 2026-06-09
+### Changed
+- Genericized example configs and docs: `tieline.config.json` /
+  `tieline.openapi.config.json` now point at `../my-frontend` / `../my-api`
+  placeholders and the committed `examples/openapi-fixture/spec.json`; the
+  `openapi` adapter doc comment and `.gitignore` no longer reference private
+  project names.
 
 ### Added
 

@@ -1,7 +1,7 @@
 {
   "name": "@nugehs/tieline",
-  "version": "0.1.0",
-  "description": "tieline — static frontend↔backend contract-drift checker. Pact without writing a single contract test.",
+  "version": "0.1.1",
+  "description": "tieline \u2014 static frontend\u2194backend contract-drift checker. Pact without writing a single contract test.",
   "type": "module",
   "bin": {
     "tieline": "bin/tieline.mjs",

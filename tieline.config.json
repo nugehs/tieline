@@ -1,13 +1,13 @@
 {
   "client": {
     "adapter": "rtk-query",
-    "repo": "../bashbop-event-web",
+    "repo": "../my-frontend",
     "roots": ["redux/apis", "src/redux/apis"],
     "basePath": "/api/v1"
   },
   "server": {
     "adapter": "nestjs",
-    "repo": "../bashbop-api",
+    "repo": "../my-api",
     "roots": ["src"],
     "globalPrefix": "api/v1",
     "spec": "http://localhost:9999/doc-json"
