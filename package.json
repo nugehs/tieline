@@ -1,6 +1,7 @@
 {
   "name": "@nugehs/tieline",
   "version": "0.1.2",
+  "mcpName": "io.github.nugehs/tieline",
   "description": "tieline — static frontend↔backend contract-drift checker. Pact without writing a single contract test.",
   "type": "module",
   "bin": {
@@ -11,6 +12,7 @@
     "check": "node bin/tieline.mjs check",
     "mcp": "node bin/tieline-mcp.mjs",
     "test": "node --test test/*.test.mjs",
+    "version": "node scripts/sync-server-version.mjs && git add server.json",
     "prepublishOnly": "npm test"
   },
   "engines": {

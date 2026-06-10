@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-06-10
+
+### Added
+
+- `tieline mcp` subcommand on the main bin (same server as `tieline-mcp`), so
+  MCP clients can launch it via `npx @nugehs/tieline mcp`.
+- MCP Registry manifest (`server.json`), `mcpName` in `package.json`, and a
+  registry publish job in the release workflow — first MCP Registry release.
+- `version` lifecycle hook keeps `server.json` in sync with `package.json`.
+- README: demo GIF showing drift detection against the express example fixtures.
+
+### Changed
+
+- README badges use semantic colors instead of brand red.
+
 ## [0.1.1] - 2026-06-09
 ### Changed
 - Genericized example configs and docs: `tieline.config.json` /

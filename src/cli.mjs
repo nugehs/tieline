@@ -12,6 +12,11 @@ export async function run(argv) {
 
   if (args.command === 'init') return void runInit();
 
+  if (args.command === 'mcp') {
+    const { serve } = await import('./mcp.mjs');
+    return serve();
+  }
+
   const cfg = loadConfig(args.config);
 
   if (args.command === 'doctor') return runDoctor(cfg, args);
@@ -54,7 +59,7 @@ function parseArgs(argv) {
   const args = { command: 'check', json: false, noFail: false, config: null, help: false, html: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === 'check' || a === 'list' || a === 'orphans' || a === 'doctor' || a === 'init') args.command = a;
+    if (a === 'check' || a === 'list' || a === 'orphans' || a === 'doctor' || a === 'init' || a === 'mcp') args.command = a;
     else if (a === '--json') args.json = true;
     else if (a === '--no-fail') args.noFail = true;
     else if (a === '--config') args.config = argv[++i];
@@ -69,7 +74,7 @@ function printHelp() {
 tieline — static FE↔BE contract-drift checker
 
 USAGE
-  tieline [init|check|list|orphans|doctor] [options]
+  tieline [init|check|list|orphans|doctor|mcp] [options]
 
 COMMANDS
   init       Auto-detect nearby repos and write a tieline.config.json
@@ -78,6 +83,7 @@ COMMANDS
   orphans    List backend routes no resolvable frontend call reaches
   doctor     Diff native-parsed code routes vs the OpenAPI spec (needs server.spec):
              undocumented (in code, not in spec) + phantom (in spec, not in code)
+  mcp        Start the MCP server (stdio) — same as the tieline-mcp bin
 
 OPTIONS
   --config <path>   Path to tieline.config.json (default: search up from cwd)
