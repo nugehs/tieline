@@ -2,7 +2,7 @@
 
 **Static frontend↔backend contract-drift checker. Pact without writing a single contract test.**
 
-[![npm](https://img.shields.io/npm/v/@nugehs/tieline?style=flat-square&color=dc0000)](https://www.npmjs.com/package/@nugehs/tieline) [![CI](https://img.shields.io/github/actions/workflow/status/nugehs/tieline/test.yml?style=flat-square&label=CI)](https://github.com/nugehs/tieline/actions/workflows/test.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-dc0000?style=flat-square)](LICENSE) [![node](https://img.shields.io/badge/node-%3E%3D18-dc0000?style=flat-square)](#) [![tests](https://img.shields.io/badge/tests-71%20passing-dc0000?style=flat-square)](#tests) [![dependencies](https://img.shields.io/badge/dependencies-0-dc0000?style=flat-square)](#)
+[![npm](https://img.shields.io/npm/v/@nugehs/tieline?style=flat-square)](https://www.npmjs.com/package/@nugehs/tieline) [![CI](https://img.shields.io/github/actions/workflow/status/nugehs/tieline/test.yml?style=flat-square&label=CI)](https://github.com/nugehs/tieline/actions/workflows/test.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE) [![node](https://img.shields.io/badge/node-%3E%3D18-blue?style=flat-square)](#) [![tests](https://img.shields.io/badge/tests-71%20passing-brightgreen?style=flat-square)](#tests) [![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square)](#)
 
 ![tieline demo](tieline-demo.gif)
 
