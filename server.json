@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.nugehs/tieline",
   "title": "tieline",
-  "description": "Static frontend-backend contract-drift checker. Finds routes the FE calls that the BE does not expose. CLI + MCP.",
+  "description": "Static FE-BE contract-drift checker: finds frontend calls the backend does not expose. CLI + MCP.",
   "websiteUrl": "https://github.com/nugehs/tieline#readme",
   "repository": {
     "url": "https://github.com/nugehs/tieline",
