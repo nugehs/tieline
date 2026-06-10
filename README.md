@@ -4,6 +4,8 @@
 
 [![npm](https://img.shields.io/npm/v/@nugehs/tieline?style=flat-square&color=dc0000)](https://www.npmjs.com/package/@nugehs/tieline) [![CI](https://img.shields.io/github/actions/workflow/status/nugehs/tieline/test.yml?style=flat-square&label=CI)](https://github.com/nugehs/tieline/actions/workflows/test.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-dc0000?style=flat-square)](LICENSE) [![node](https://img.shields.io/badge/node-%3E%3D18-dc0000?style=flat-square)](#) [![tests](https://img.shields.io/badge/tests-71%20passing-dc0000?style=flat-square)](#tests) [![dependencies](https://img.shields.io/badge/dependencies-0-dc0000?style=flat-square)](#)
 
+![tieline demo](tieline-demo.gif)
+
 `tieline` reads the code you already wrote on both sides of an API boundary — the
 HTTP calls your frontend makes and the routes your backend exposes — and tells you
 where they disagree. No contract tests to author, no broker to run, no backend to
